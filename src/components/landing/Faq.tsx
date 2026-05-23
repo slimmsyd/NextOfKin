@@ -14,7 +14,7 @@ const left: Qa[] = [
       <>
         <p>
           Both. The will is one piece. The rest is the living plan around
-          it — your asset inventory, the people you protect, the day-of
+          it: your asset inventory, the people you protect, the day-of
           instructions your family will need to actually find and act on.
         </p>
       </>
@@ -44,7 +44,7 @@ const left: Qa[] = [
     q: "How much does it cost?",
     a: (
       <p>
-        Under $50 to start. The plan isn&rsquo;t how we make money — we earn
+        Under $50 to start. The plan isn&rsquo;t how we make money. We earn
         on the asset recovery and dissemination work that comes later, when
         your family needs it.
       </p>
@@ -58,7 +58,7 @@ const right: Qa[] = [
     a: (
       <p>
         We don&rsquo;t act on any single signal. Multiple independent
-        sources — your own check-ins, trusted contacts, public records —
+        sources (your own check-ins, trusted contacts, public records)
         have to converge, and every action has a 72-hour grace window that
         you or your people can reverse.
       </p>
@@ -69,8 +69,8 @@ const right: Qa[] = [
     a: (
       <p>
         No. The legal language comes from attorney-vetted templates.
-        AI handles only the conversation that gathers your information —
-        it never touches the legal core.
+        AI handles only the conversation that gathers your information.
+        It never touches the legal core.
       </p>
     ),
   },
@@ -89,7 +89,7 @@ const right: Qa[] = [
       <p>
         Black American families first. The product, the language, and the
         partnerships are built around how our families actually plan,
-        grieve, and pass things on — not retrofitted from a generic tool.
+        grieve, and pass things on. Not retrofitted from a generic tool.
       </p>
     ),
   },

@@ -5,7 +5,7 @@ const actions = [
   },
   {
     verb: "notify",
-    body: "On verified passing, we reach the people you named — in the way you wanted them reached — within hours, not months.",
+    body: "On verified passing, we reach the people you named, in the way you wanted them reached, within hours, not months.",
   },
   {
     verb: "memorialize",
@@ -31,8 +31,8 @@ export function DontStopAtTheWill() {
           <span className="italic text-surface-lavender-200">notify</span>,{" "}
           <span className="italic text-surface-lavender-200">memorialize</span>,
           and{" "}
-          <span className="italic text-surface-lavender-200">give</span> —
-          quietly, accurately, the day everything changes.
+          <span className="italic text-surface-lavender-200">give</span>.
+          Quietly, accurately, the day everything changes.
         </h2>
 
         <dl className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-14">

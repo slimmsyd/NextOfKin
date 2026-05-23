@@ -222,7 +222,7 @@ function VideoTile({ card }: { card: VideoCard }) {
       {hasMedia && !reducedMotion && (
         <iframe
           src={embedSrc}
-          title={`${card.title} — silent preview`}
+          title={`${card.title}: silent preview`}
           aria-hidden
           tabIndex={-1}
           loading="lazy"
