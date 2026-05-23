@@ -72,7 +72,7 @@ export function Footer() {
             />
             <button
               type="submit"
-              className="px-7 py-3.5 rounded-full bg-white text-brand-indigo font-medium hover:bg-surface-lavender-200 transition-colors"
+              className="cursor-pointer px-7 py-3.5 rounded-full bg-white text-brand-indigo font-medium hover:bg-surface-lavender-200 transition-colors"
             >
               Subscribe
             </button>
@@ -96,7 +96,7 @@ export function Footer() {
                   <li key={l.label}>
                     <Link
                       href={l.href}
-                      className="text-sm text-white/80 hover:text-white transition-colors"
+                      className="cursor-pointer text-sm text-white/80 hover:text-white transition-colors"
                     >
                       {l.label}
                     </Link>
@@ -119,7 +119,7 @@ export function Footer() {
               <li key={s}>
                 <Link
                   href="#"
-                  className="text-sm text-white/70 hover:text-white transition-colors"
+                  className="cursor-pointer text-sm text-white/70 hover:text-white transition-colors"
                 >
                   {s}
                 </Link>

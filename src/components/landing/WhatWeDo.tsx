@@ -158,7 +158,7 @@ function ServiceCard({
       onMouseLeave={onDeactivate}
       onFocus={onActivate}
       onBlur={onDeactivate}
-      className={`group relative rounded-3xl overflow-hidden flex flex-col min-h-[440px] md:min-h-[520px] text-white text-left transition-[box-shadow,transform] duration-300 ${
+      className={`cursor-pointer group relative rounded-3xl overflow-hidden flex flex-col min-h-[440px] md:min-h-[520px] text-white text-left transition-[box-shadow,transform] duration-300 ${
         isActive
           ? "ring-2 ring-brand-violet shadow-[0_20px_40px_-15px_rgba(88,82,245,0.35)]"
           : "ring-1 ring-white/0 hover:shadow-[0_15px_30px_-15px_rgba(10,10,15,0.3)]"
@@ -192,7 +192,7 @@ function ServiceCard({
             </p>
             <Link
               href={card.cta.href}
-              className="mt-6 md:mt-7 inline-flex items-center gap-2 text-sm md:text-base text-white hover:text-white/80 transition-colors"
+              className="cursor-pointer mt-6 md:mt-7 inline-flex items-center gap-2 text-sm md:text-base text-white hover:text-white/80 transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               {card.cta.label}

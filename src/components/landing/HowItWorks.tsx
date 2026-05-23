@@ -98,7 +98,7 @@ export function HowItWorks() {
               type="button"
               aria-label="Skip to next question"
               onClick={next}
-              className="hidden md:inline-flex absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 items-center justify-center w-12 h-12 rounded-full bg-white text-foreground shadow-[0_4px_16px_-4px_rgba(10,10,15,0.15)] hover:shadow-[0_6px_20px_-4px_rgba(10,10,15,0.22)] hover:text-brand-violet transition-all"
+              className="cursor-pointer hidden md:inline-flex absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 items-center justify-center w-12 h-12 rounded-full bg-white text-foreground shadow-[0_4px_16px_-4px_rgba(10,10,15,0.15)] hover:shadow-[0_6px_20px_-4px_rgba(10,10,15,0.22)] hover:text-brand-violet transition-all"
             >
               <svg
                 viewBox="0 0 24 24"

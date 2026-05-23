@@ -45,35 +45,32 @@ const trustItems = [
   },
 ];
 
-type FolderImage = {
+type Folder = {
   src: string;
   alt: string;
-  rotation: number; // degrees
-  lift: number; // px, positive = sits lower in the row
+  // Each folder PNG renders at its natural aspect ratio. Use `lift` to nudge
+  // it vertically for a piano-key effect when there are 3+ folders.
+  lift?: number; // px, positive = sits lower
 };
 
-const folders: FolderImage[] = [
+// Add more folder PNGs here as they're produced. The row centers any number
+// of folders and aligns them to the bottom.
+const folders: Folder[] = [
   {
     src: "/folders/folder-1.png",
-    alt: "Family photograph kept inside an Extra Kin folder",
-    rotation: -6,
-    lift: 8,
+    alt: "Family photograph kept in a NextOfKin folder",
   },
   {
     src: "/folders/folder-2.png",
-    alt: "Family photograph kept inside an Extra Kin folder",
-    rotation: 6,
-    lift: 8,
+    alt: "Family photograph kept in a NextOfKin folder",
   },
 ];
 
-function FolderCard({ folder }: { folder: FolderImage }) {
+function FolderCard({ folder }: { folder: Folder }) {
   return (
     <div
-      className="relative will-change-transform drop-shadow-[0_30px_40px_rgba(10,10,15,0.45)]"
-      style={{
-        transform: `rotate(${folder.rotation}deg) translateY(${folder.lift}px)`,
-      }}
+      className="relative w-full drop-shadow-[0_28px_40px_rgba(10,10,15,0.45)]"
+      style={folder.lift ? { transform: `translateY(${folder.lift}px)` } : undefined}
     >
       <Image
         src={folder.src}
@@ -81,6 +78,7 @@ function FolderCard({ folder }: { folder: FolderImage }) {
         width={600}
         height={800}
         priority
+        sizes="(max-width: 768px) 45vw, 340px"
         className="w-full h-auto object-contain select-none pointer-events-none"
       />
     </div>
@@ -93,7 +91,7 @@ export function Hero() {
       <div className="max-w-[1400px] mx-auto">
         {/* === Hero card === */}
         <div
-          className="relative rounded-3xl pt-36 md:pt-44 pb-72 md:pb-80 lg:pb-96 text-white overflow-hidden"
+          className="relative rounded-3xl pt-36 md:pt-44 pb-[320px] md:pb-[400px] lg:pb-[480px] text-white overflow-hidden"
           style={{
             background:
               "radial-gradient(ellipse at 50% 0%, #5A4FE0 0%, #3B35C3 35%, #2A2599 80%, #1F1A7A 100%)",
@@ -182,12 +180,12 @@ export function Hero() {
           </div>
 
           {/* === Folders flying up from inside the hero card (clipped by overflow-hidden) === */}
-          <div className="absolute inset-x-0 bottom-0 z-20 px-4 md:px-12 translate-y-[12%]">
-            <div className="flex justify-center items-end gap-6 md:gap-10 lg:gap-14 max-w-3xl mx-auto">
+          <div className="absolute inset-x-0 bottom-0 z-20 px-4 md:px-8 lg:px-12 translate-y-[8%]">
+            <div className="flex justify-center items-end gap-4 md:gap-6 lg:gap-8 max-w-[1300px] mx-auto">
               {folders.map((folder, i) => (
                 <div
                   key={i}
-                  className="w-[44%] md:w-[280px] lg:w-[320px] max-w-[320px]"
+                  className="flex-1 max-w-[260px] md:max-w-[300px] lg:max-w-[340px]"
                 >
                   <FolderCard folder={folder} />
                 </div>

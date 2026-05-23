@@ -110,7 +110,7 @@ function Item({
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        className="w-full text-left py-6 flex items-start justify-between gap-6 group"
+        className="cursor-pointer w-full text-left py-6 flex items-start justify-between gap-6 group"
       >
         <span className="text-lg md:text-xl font-medium text-foreground group-hover:text-brand-indigo transition-colors">
           {qa.q}

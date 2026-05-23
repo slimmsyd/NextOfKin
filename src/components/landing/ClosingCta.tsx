@@ -22,13 +22,13 @@ export function ClosingCta() {
           <div className="relative mt-10 flex flex-col sm:flex-row gap-3">
             <Link
               href="/start"
-              className="inline-flex items-center justify-center px-7 py-3.5 bg-white text-brand-indigo rounded-full font-medium hover:bg-surface-lavender-200 transition-colors"
+              className="cursor-pointer inline-flex items-center justify-center px-7 py-3.5 bg-white text-brand-indigo rounded-full font-medium hover:bg-surface-lavender-200 transition-colors"
             >
               Start your plan
             </Link>
             <Link
               href="#faq"
-              className="inline-flex items-center justify-center px-7 py-3.5 border border-white/30 text-white rounded-full font-medium hover:bg-white/10 transition-colors"
+              className="cursor-pointer inline-flex items-center justify-center px-7 py-3.5 border border-white/30 text-white rounded-full font-medium hover:bg-white/10 transition-colors"
             >
               Read the FAQ
             </Link>

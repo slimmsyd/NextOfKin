@@ -31,7 +31,7 @@ export function Nav() {
     <nav className="z-50 bg-white/95 backdrop-blur-md rounded-full pl-3 pr-2 py-2 shadow-[0_2px_20px_rgba(59,53,195,0.08)] flex items-center gap-1">
       <Link
         href="/"
-        className="flex items-center gap-2 px-2 py-1.5 text-sm font-semibold text-foreground"
+        className="cursor-pointer flex items-center gap-2 px-2 py-1.5 text-sm font-semibold text-foreground"
       >
         <LogoMark />
         <span>NextOfKin</span>
@@ -41,7 +41,7 @@ export function Nav() {
           <li key={item.href}>
             <Link
               href={item.href}
-              className="px-4 py-2 text-sm text-foreground/75 hover:text-foreground transition-colors"
+              className="cursor-pointer px-4 py-2 text-sm text-foreground/75 hover:text-foreground transition-colors"
             >
               {item.label}
             </Link>
@@ -50,13 +50,13 @@ export function Nav() {
       </ul>
       <Link
         href="#login"
-        className="hidden md:inline-flex px-4 py-2 text-sm text-foreground/75 hover:text-foreground transition-colors"
+        className="cursor-pointer hidden md:inline-flex px-4 py-2 text-sm text-foreground/75 hover:text-foreground transition-colors"
       >
         Log in
       </Link>
       <Link
         href="#cta"
-        className="ml-1 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-brand-violet text-white rounded-full hover:bg-brand-indigo transition-colors"
+        className="cursor-pointer ml-1 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-brand-violet text-white rounded-full hover:bg-brand-indigo transition-colors"
       >
         Start your plan
         <span aria-hidden>&rarr;</span>
