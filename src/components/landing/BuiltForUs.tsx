@@ -35,13 +35,13 @@ type VideoCard = {
   type: "video";
   title: string;
   source: string;
-  // Optional — leave "" to hide the duration chip. YouTube oEmbed doesn't
+  // Optional. Leave "" to hide the duration chip. YouTube oEmbed doesn't
   // expose duration; fill these in manually when you want them shown.
   duration: string;
   // Paste the 11-char id from the YouTube URL (e.g. youtu.be/<id> or ?v=<id>).
   // Leave "" to keep the gradient placeholder until you have a real link.
   youtubeId: string;
-  // Full watch URL — opens in a new tab when the card is clicked.
+  // Full watch URL. Opens in a new tab when the card is clicked.
   href: string;
 };
 
