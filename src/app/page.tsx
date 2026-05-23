@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { AnnouncementBar } from "@/components/landing/AnnouncementBar";
 import { Nav } from "@/components/landing/Nav";
 import { Hero } from "@/components/landing/Hero";
-import { TrustedBy } from "@/components/landing/TrustedBy";
 import { ClosingTheGap } from "@/components/landing/ClosingTheGap";
 import { WhatWeDo } from "@/components/landing/WhatWeDo";
 import { BuiltForUs } from "@/components/landing/BuiltForUs";
@@ -14,11 +13,11 @@ import { ClosingCta } from "@/components/landing/ClosingCta";
 import { Footer } from "@/components/landing/Footer";
 
 export const metadata: Metadata = {
-  title: "NextOfKin — An estate operating system for the people you love",
+  title: "The legacy plan built for our families",
   description:
     "NextOfKin is the continuous estate plan, built for Black American families. Gather your assets, name who you protect, and leave a plan your family can actually find and follow.",
   openGraph: {
-    title: "NextOfKin — An estate operating system for the people you love",
+    title: "The legacy plan built for our families",
     description:
       "The continuous estate plan, built for Black American families.",
     type: "website",
@@ -34,7 +33,6 @@ export default function HomePage() {
       </div>
       <main>
         <Hero />
-        <TrustedBy />
         <ClosingTheGap />
         <WhatWeDo />
         <BuiltForUs />

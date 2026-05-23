@@ -81,7 +81,7 @@ export function Footer() {
 
         <div className="mt-16 grid grid-cols-2 md:grid-cols-5 gap-10 md:gap-8">
           <div className="col-span-2 md:col-span-1">
-            <p className="text-xl font-semibold tracking-tight">Extra Kin</p>
+            <p className="text-xl font-semibold tracking-tight">NextOfKin</p>
             <p className="mt-3 text-sm text-white/60 leading-relaxed max-w-xs">
               An estate operating system for the people you love.
             </p>
@@ -109,8 +109,8 @@ export function Footer() {
 
         <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <p className="text-xs text-white/50 max-w-2xl leading-relaxed">
-            Extra Kin is a service of OnCode Software Solutions · Built in
-            Raleigh, NC. Extra Kin is not a law firm and does not provide
+            NextOfKin is a service of OnCode Software Solutions · Built in
+            Raleigh, NC. NextOfKin is not a law firm and does not provide
             legal advice. Legal templates are reviewed by licensed attorneys
             in each state we serve.
           </p>
