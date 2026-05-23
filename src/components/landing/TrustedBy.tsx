@@ -1,34 +1,40 @@
 const partners = [
   {
-    name: "meridian",
+    name: "funeral homes",
     glyph: "♦",
-    className: "text-lg md:text-xl text-foreground/55 font-medium tracking-tight lowercase",
+    className:
+      "text-lg md:text-xl text-foreground/55 font-medium tracking-tight lowercase",
   },
   {
-    name: "Holloway",
+    name: "Credit Unions",
     glyph: "●",
-    className: "text-lg md:text-xl text-foreground/55 font-semibold tracking-tight",
+    className:
+      "text-lg md:text-xl text-foreground/55 font-semibold tracking-tight",
   },
   {
-    name: "Westbrook",
+    name: "HBCU Networks",
     glyph: "",
-    className: "text-lg md:text-xl text-foreground/55 font-serif italic tracking-tight",
+    className:
+      "text-lg md:text-xl text-foreground/55 font-serif italic tracking-tight",
   },
   {
-    name: "ATELIER",
+    name: "FAMILY ATTORNEYS",
     glyph: "○",
-    className: "text-xs md:text-sm text-foreground/55 font-medium tracking-[0.35em]",
+    className:
+      "text-xs md:text-sm text-foreground/55 font-medium tracking-[0.35em]",
   },
   {
-    name: "Stanton",
+    name: "Financial Media",
     glyph: "",
     suffix: ".",
-    className: "text-lg md:text-xl text-foreground/55 font-medium tracking-tight",
+    className:
+      "text-lg md:text-xl text-foreground/55 font-medium tracking-tight",
   },
   {
-    name: "Avalon Trust",
+    name: "Community Centers",
     glyph: "▲",
-    className: "text-lg md:text-xl text-foreground/55 font-medium tracking-tight",
+    className:
+      "text-lg md:text-xl text-foreground/55 font-medium tracking-tight",
   },
 ];
 
@@ -37,8 +43,8 @@ export function TrustedBy() {
     <section className="px-6 md:px-12 py-8 md:py-12">
       <div className="max-w-[1400px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-7 items-center gap-y-8 gap-x-6">
-          <p className="md:col-span-1 text-sm text-surface-dusty leading-snug max-w-[14ch]">
-            Trusted by advisors, estate firms, and family offices
+          <p className="md:col-span-1 text-sm text-surface-dusty leading-snug max-w-[16ch]">
+            Built for the institutions our families already trust
           </p>
           <div className="md:col-span-6 flex flex-wrap items-center justify-around gap-x-8 gap-y-6 md:gap-x-12">
             {partners.map((p) => (

@@ -129,7 +129,7 @@ export function HowItWorks() {
             A full estate plan you and your family can actually follow.
           </h3>
           <p className="mt-5 md:mt-6 text-base md:text-lg text-foreground/70 leading-relaxed max-w-xl mx-auto">
-            We&rsquo;ll walk you through it the rest of the way — about an
+            We&rsquo;ll walk you through it the rest of the way. About an
             hour, all conversational, voice or typed.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">

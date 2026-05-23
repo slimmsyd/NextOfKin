@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AnnouncementBar } from "@/components/landing/AnnouncementBar";
 import { Nav } from "@/components/landing/Nav";
 import { Hero } from "@/components/landing/Hero";
+import { TrustedBy } from "@/components/landing/TrustedBy";
 import { ClosingTheGap } from "@/components/landing/ClosingTheGap";
 import { WhatWeDo } from "@/components/landing/WhatWeDo";
 import { BuiltForUs } from "@/components/landing/BuiltForUs";
@@ -33,6 +34,7 @@ export default function HomePage() {
       </div>
       <main>
         <Hero />
+        <TrustedBy />
         <ClosingTheGap />
         <WhatWeDo />
         <BuiltForUs />
