@@ -91,7 +91,7 @@ export function Hero() {
       <div className="max-w-[1400px] mx-auto">
         {/* === Hero card === */}
         <div
-          className="relative rounded-3xl pt-32 md:pt-40 lg:pt-44 pb-24 md:pb-28 lg:pb-32 text-white overflow-hidden"
+          className="relative rounded-3xl pt-32 md:pt-40 lg:pt-44 pb-[300px] md:pb-[360px] lg:pb-[420px] text-white overflow-hidden"
           style={{
             background:
               "radial-gradient(ellipse at 50% 0%, #5A4FE0 0%, #3B35C3 35%, #2A2599 80%, #1F1A7A 100%)",
@@ -179,19 +179,18 @@ export function Hero() {
             </ul>
           </div>
 
-        </div>
-
-        {/* === Folders as an overlay below the hero card, pulled up to overlap === */}
-        <div className="relative z-20 -mt-32 md:-mt-40 lg:-mt-48 px-4 md:px-8 lg:px-12">
-          <div className="flex justify-center items-end gap-4 md:gap-6 lg:gap-8 max-w-[1300px] mx-auto">
-            {folders.map((folder, i) => (
-              <div
-                key={i}
-                className="flex-1 max-w-[280px] md:max-w-[340px] lg:max-w-[400px]"
-              >
-                <FolderCard folder={folder} />
-              </div>
-            ))}
+          {/* === Folders rising from below the card edge (bottom clipped by overflow-hidden) === */}
+          <div className="absolute inset-x-0 z-20 px-4 md:px-8 lg:px-12 bottom-[-80px] md:bottom-[-120px] lg:bottom-[-160px]">
+            <div className="flex justify-center items-end gap-4 md:gap-6 lg:gap-8 max-w-[1300px] mx-auto">
+              {folders.map((folder, i) => (
+                <div
+                  key={i}
+                  className="flex-1 max-w-[260px] md:max-w-[320px] lg:max-w-[380px]"
+                >
+                  <FolderCard folder={folder} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
