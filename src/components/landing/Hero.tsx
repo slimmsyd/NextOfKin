@@ -91,7 +91,7 @@ export function Hero() {
       <div className="max-w-[1400px] mx-auto">
         {/* === Hero card === */}
         <div
-          className="relative rounded-3xl pt-32 md:pt-40 lg:pt-44 pb-[400px] md:pb-[480px] lg:pb-[560px] text-white overflow-hidden"
+          className="relative rounded-3xl pt-32 md:pt-40 lg:pt-44 pb-[300px] md:pb-[360px] lg:pb-[420px] text-white overflow-hidden"
           style={{
             background:
               "radial-gradient(ellipse at 50% 0%, #5A4FE0 0%, #3B35C3 35%, #2A2599 80%, #1F1A7A 100%)",
@@ -179,8 +179,8 @@ export function Hero() {
             </ul>
           </div>
 
-          {/* === Folders pushed to the very bottom of the hero card === */}
-          <div className="absolute inset-x-0 bottom-0 z-20 px-4 md:px-8 lg:px-12">
+          {/* === Folders rising from below the card edge (bottom clipped by overflow-hidden) === */}
+          <div className="absolute inset-x-0 z-20 px-4 md:px-8 lg:px-12 bottom-[-80px] md:bottom-[-120px] lg:bottom-[-160px]">
             <div className="flex justify-center items-end gap-4 md:gap-6 lg:gap-8 max-w-[1300px] mx-auto">
               {folders.map((folder, i) => (
                 <div
