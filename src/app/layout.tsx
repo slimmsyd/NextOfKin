@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins, Instrument_Serif } from "next/font/google";
+import { VoiceProvider } from "@/components/voice/VoiceProvider";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -31,7 +32,9 @@ export default function RootLayout({
       lang="en"
       className={`${poppins.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <VoiceProvider>{children}</VoiceProvider>
+      </body>
     </html>
   );
 }

@@ -21,7 +21,7 @@ export function ClosingCta() {
           </p>
           <div className="relative mt-10 flex flex-col sm:flex-row gap-3">
             <Link
-              href="/start"
+              href="/signup"
               className="cursor-pointer inline-flex items-center justify-center px-7 py-3.5 bg-white text-brand-indigo rounded-full font-medium hover:bg-surface-lavender-200 transition-colors"
             >
               Start your plan

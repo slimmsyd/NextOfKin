@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 const items = [
   { label: "How it works", href: "#how-it-works" },
   { label: "What we protect", href: "#what-we-protect" },
-  { label: "Pricing", href: "#pricing" },
   { label: "For families", href: "#built-for-us" },
   { label: "FAQ", href: "#faq" },
 ];
@@ -106,13 +105,13 @@ export function Nav() {
           ))}
         </ul>
         <Link
-          href="#login"
+          href="/signup"
           className="cursor-pointer hidden md:inline-flex px-4 py-2 text-sm text-foreground/75 hover:text-foreground transition-colors"
         >
           Log in
         </Link>
         <Link
-          href="#cta"
+          href="/signup"
           className="cursor-pointer ml-1 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-brand-violet text-white rounded-full hover:bg-brand-indigo transition-colors"
         >
           Start your plan
@@ -176,14 +175,14 @@ export function Nav() {
 
         <div className="absolute bottom-0 inset-x-0 px-6 pb-10 pt-6 border-t border-surface-lavender-300 bg-surface-lavender-100">
           <Link
-            href="#login"
+            href="/signup"
             onClick={() => setOpen(false)}
             className="cursor-pointer block text-center py-3 text-sm font-medium text-foreground/75 hover:text-foreground transition-colors"
           >
             Log in
           </Link>
           <Link
-            href="#cta"
+            href="/signup"
             onClick={() => setOpen(false)}
             className="cursor-pointer mt-3 flex items-center justify-center gap-2 w-full py-4 bg-brand-violet text-white rounded-full font-medium hover:bg-brand-indigo transition-colors"
           >

@@ -154,7 +154,7 @@ export function Hero() {
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
               <Link
-                href="#cta"
+                href="/signup"
                 className="cursor-pointer inline-flex items-center gap-2 px-7 py-3.5 bg-white text-foreground rounded-full font-medium shadow-[0_8px_30px_rgba(0,0,0,0.25)] hover:bg-surface-lavender-200 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-brand-indigo"
               >
                 Start your plan
