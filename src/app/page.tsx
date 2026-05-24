@@ -32,11 +32,13 @@ export default function HomePage() {
   return (
     <>
       <AnnouncementBar />
-      <div className="flex justify-center px-4 py-4 md:py-5">
-        <Nav />
-      </div>
       <main>
-        <Hero />
+        <div className="relative">
+          <div className="absolute inset-x-0 top-0 z-50 flex justify-center px-4 py-4 md:py-5">
+            <Nav />
+          </div>
+          <Hero />
+        </div>
         <TrustedBy />
         <ClosingTheGap />
         <WhatWeDo />

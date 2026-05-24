@@ -173,7 +173,7 @@ All product forms (signup, intake, profile edits) use the primitives in `src/com
 - Sizes: `md` (default — `h-[44px] px-6 text-sm`) and `lg` (`h-[50px] px-8 text-[14px]`)
 - Shape: always `rounded-full`, `font-medium`
 - Variants:
-  - `variant="primary"` (default) — filled. Use `tone="indigo"` (default, `bg-brand-indigo` → `bg-brand-violet` hover) for in-app CTAs. Use `tone="ink"` (`bg-foreground` near-black) only for the signup screen's "Next" button, which is intentionally distinct from the in-app indigo CTAs.
+  - `variant="primary"` (default) — filled. Use `tone="indigo"` (default, `bg-brand-indigo` → `bg-brand-violet` hover) for all primary CTAs including signup. `tone="ink"` (`bg-foreground` near-black) is available as an escape hatch but is not currently used in the product; signup previously used ink and was switched to indigo for brand consistency.
   - `variant="secondary"` — outlined. `bg-transparent border border-[#DFDFE4] text-foreground hover:bg-foreground/5`. Use for Back, dismiss, and similar tertiary actions.
 - Disabled: `opacity-50`, `cursor-not-allowed`, `pointer-events-none` (handled by primitive)
 - Focus ring: `focus-visible:ring-2` matched to variant

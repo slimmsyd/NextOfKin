@@ -86,7 +86,7 @@ export function SignupForm() {
         <Button
           type="submit"
           variant="primary"
-          tone="ink"
+          tone="indigo"
           size="lg"
           fullWidth
           disabled={pending}
