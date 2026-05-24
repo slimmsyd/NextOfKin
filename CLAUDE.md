@@ -72,7 +72,7 @@ If a request implies V1.5 or V2 work, flag it and ask before building.
 | Layer | Choice |
 |---|---|
 | Frontend | **Next.js 16.2.6** (App Router, Turbopack), React 19.2, TypeScript 5.9, Tailwind 4, shadcn/ui |
-| Backend | Supabase (Postgres, Auth, Storage, RLS) — *to be added* |
+| Backend | Supabase (Postgres + Auth + RLS) via Prisma 7.x ORM with `@prisma/adapter-pg` driver. **Wired.** |
 | Agent runtime | Claude API with structured outputs and tool use — *to be added* |
 | Document engine | Attorney-reviewed templates + deterministic data binding — *V1.5* |
 | Background jobs | n8n for cron + webhooks — *to be added when needed* |
