@@ -12,6 +12,10 @@ import { DontStopAtTheWill } from "@/components/landing/DontStopAtTheWill";
 import { Faq } from "@/components/landing/Faq";
 import { ClosingCta } from "@/components/landing/ClosingCta";
 import { Footer } from "@/components/landing/Footer";
+import { getLandingCta } from "@/lib/landing-cta";
+
+
+
 
 export const metadata: Metadata = {
   title: "The legacy plan built for our families",
@@ -25,24 +29,27 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const cta = await getLandingCta();
   return (
     <>
       <AnnouncementBar />
-      <div className="flex justify-center px-4 py-4 md:py-5">
-        <Nav />
-      </div>
       <main>
-        <Hero />
+        <div className="relative">
+          <div className="absolute inset-x-0 top-0 z-50 flex justify-center px-4 py-4 md:py-5">
+            <Nav cta={cta} />
+          </div>
+          <Hero cta={cta} />
+        </div>
         <TrustedBy />
         <ClosingTheGap />
         <WhatWeDo />
         <BuiltForUs />
-        <HowItWorks />
+        <HowItWorks cta={cta} />
         <WhatWeProtect />
         <DontStopAtTheWill />
         <Faq />
-        <ClosingCta />
+        <ClosingCta cta={cta} />
       </main>
       <Footer />
     </>

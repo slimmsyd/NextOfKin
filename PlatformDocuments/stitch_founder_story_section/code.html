@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Create an Account | NextOfKin</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Playfair Display for headings -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              indigo: '#3b35c3',
+              surface: '#fcf8ff',
+              dim: '#dbd6f8',
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-typography">
+    h1, h2, .font-serif {
+      font-family: 'Playfair Display', serif;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-brand-surface text-gray-900">
+<main class="split-screen flex flex-col md:flex-row overflow-hidden">
+<!-- BEGIN: Left Visual Section -->
+<section class="md:w-1/2 bg-brand-indigo flex flex-col justify-between relative overflow-hidden p-0" data-purpose="branding-sidebar"><!-- Full-bleed background image -->
+<img alt="Cycle of care background" class="absolute inset-0 w-full h-full object-cover z-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_VN4q674gROExOo6XyLKDBQm20y2y36mZHeXHlprT4LN4PWEWbrS4jO7Rp-jq_3uHCTAvd9z_QgFECMYnGgGT0ocw9k9BRT1V4wQ3brMylPahRFw80tYJUdHjNzQ2804uuWhXhyCmn1Z6HLKKykCmtfS0FV0jLHCpGuSvJaI7I0P9XD0GeIJrWk8lYP_8rfaBFQrkDr_P_f0Thp-rGuiL3NGmL3UxTgsQFPGT-l7Fkk6KkFt3Kuz9A5o-iHwf68y0lCOs7xXhKyWm"/>
+<!-- Dark overlay for text legibility -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 z-10"></div>
+<!-- Content Container -->
+<div class="relative z-20 flex flex-col justify-between h-full w-full p-8 md:p-16">
+<div>
+<span class="text-white font-serif text-2xl font-bold">NextOfKin</span>
+</div>
+<div class="max-w-md">
+<h2 class="text-white text-3xl md:text-4xl font-serif leading-tight shadow-sm">
+      Make sure what you built gets to the people you love.
+    </h2>
+</div>
+</div></section>
+<!-- END: Left Visual Section -->
+<!-- BEGIN: Right Form Section -->
+<section class="md:w-1/2 bg-white flex items-center justify-center p-8 md:p-16" data-purpose="signup-form-container">
+<div class="w-full max-w-md space-y-8">
+<!-- Form Header -->
+<div class="text-center">
+<h1 class="text-4xl font-serif text-gray-900 mb-2">Create an account</h1>
+<p class="text-gray-600">
+            Already have an account? 
+            <a class="text-brand-indigo font-semibold hover:underline" href="#">Log in</a>
+</p>
+</div>
+<!-- Registration Form -->
+<form action="#" class="space-y-4" data-purpose="registration-form" method="POST">
+<div>
+<label class="sr-only" for="first-name">First name</label>
+<input class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-indigo focus:border-brand-indigo outline-none transition-all" id="first-name" name="first-name" placeholder="First name" required="" type="text"/>
+</div>
+<div>
+<label class="sr-only" for="last-name">Last name</label>
+<input class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-indigo focus:border-brand-indigo outline-none transition-all" id="last-name" name="last-name" placeholder="Last name" required="" type="text"/>
+</div>
+<div>
+<label class="sr-only" for="email">Email</label>
+<input class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-indigo focus:border-brand-indigo outline-none transition-all" id="email" name="email" placeholder="Email" required="" type="email"/>
+</div>
+<button class="w-full bg-brand-indigo text-white font-semibold py-3 px-4 rounded-full hover:bg-opacity-90 transition-colors shadow-md mt-6" data-purpose="submit-button" type="submit">
+            Next
+          </button>
+</form>
+<!-- Divider -->
+<div class="relative flex items-center py-4">
+<div class="flex-grow border-t border-gray-300"></div>
+<span class="flex-shrink mx-4 text-gray-400 text-sm uppercase tracking-wider">OR</span>
+<div class="flex-grow border-t border-gray-300"></div>
+</div>
+<!-- Social Auth Options -->
+<div class="space-y-3" data-purpose="social-auth-buttons">
+<!-- Google -->
+<button class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors">
+<img alt="Google" class="w-5 h-5 mr-3" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfyKlYqfmX2xlDh3lmlNYxJUTqC3mRkFcJRmGRPaheIUek6KPhqtC9PRckvCPTNXzPVNGJXgF8-L7VZNV-zvY0K6IyP5x1Je-t-Q9PPoRI9HUvKurORaViceNSbTFBZ929I5gGOFF6xN6Ff9FTiogVQK4R-U-tHTAghr7zVD1sQ3I6YsWiKLsScVwmCuqIrXqHEL_ZXDlzkK9MdAoOLnu-sHTlRZKmlIPkV6jVFbMpMcsB6nCcvytgUiS29IURJEg74kQ4QDS1Shik"/>
+<span class="text-sm font-medium">Sign up with Google</span>
+</button>
+<!-- Apple -->
+<button class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors">
+<svg class="w-5 h-5 mr-3" fill="currentColor" viewbox="0 0 384 512"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 21.8-88.5 21.8-11.4 0-51.1-22.1-81.9-22.1-53.1 0-99.7 34.6-126.2 84.7-20.9 39.6-10.1 107.6 14.3 149.1 10.4 17.6 21.8 32.2 33.7 43.6 22.8 22 31.7 28.5 53.7 28.5 20.8 0 30.6-28.5 54.4-28.5 24.1 0 33.4 28.5 54.7 28.5 21.3 0 31.1-13.4 53.9-33.1 24.3-34.7 33.1-66.2 33.1-67.9zM240.1 123.1c21.4-26.1 35.7-62.1 35.7-98.1 0-5.1-.6-10.2-1.7-15.3-33 1.3-73.2 21.9-97.1 49.7-18.1 21-34.6 57.5-34.6 93.7 0 5.4.8 10.8 1.8 14.8 35.5 2.7 72.8-19.1 95.9-44.8z"></path></svg>
+<span class="text-sm font-medium">Sign up with Apple</span>
+</button>
+<!-- SSO -->
+<button class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors">
+<span class="text-sm font-medium">Use Single Sign-On (SSO)</span>
+</button>
+</div>
+<!-- Footer Terms -->
+<div class="text-center text-xs text-gray-500 leading-relaxed px-4">
+          By clicking “Sign up with Google” or “Sign up with Apple” you agree to our 
+          <a class="text-brand-indigo hover:underline" href="#">Terms of Use</a> 
+          and acknowledge that you have read and understand our 
+          <a class="text-brand-indigo hover:underline" href="#">Privacy Policy</a>.
+        </div>
+<!-- Trusted By Section -->
+<div class="pt-8 border-t border-gray-100" data-purpose="social-proof">
+<p class="text-center text-xs font-semibold text-gray-400 uppercase tracking-widest mb-6">Trusted by teams at</p>
+<div class="flex flex-wrap justify-center items-center gap-6 opacity-40 grayscale">
+<img alt="Adobe" class="h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHn23okZRLSCWtDYOECFer2eGYuNork_PUP7nrJ-FyktDmrORvH1ApTtMXWVJVeZCeqscm1w0Dm1Zehb3t3CH9f3zY4DExjKuKNJ7VWH1BXj7RdhLYs0Zvl1QcTTOXB3-hoD7L6AgikvmacOFOrrUmMnDLb0aaNRommJD6KgHxzxNAhFQLmeGJVpglihgsSaJ-6_bKWKYpHFkhFN_q0n9Pi5ErTGr5qOodhSm9uslyEE6aq_mV2y1iSv_2oAw7r6tDY2D21oJCE_Uw"/>
+<img alt="Allstate" class="h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvvUP7HzrZFApWkwpmuBif5a9iPaVP9Om8Of-s7M0ylnOUFJHD9rACQLqmYUxwCtFFC4my2bBgY1pyJFVRLHUWpUDwbs-tffdnTXL3iDgnV8kanE0tvN1Po8bb_PHTFCoYjHztg37oOS8ENddB39YXa-k9MHk5nb6eJqgaDuJh2Wn4nZHiVMd5V6gU3fv4lZzfyd4AVLwDqOJ4bNXu-kpL41ZllzLyNUdPQDIqFPFErSDhziSsbMHzByCcqEiaoPO7UQJDwxaojDsD"/>
+<img alt="D&amp;G" class="h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5c8-dAiquhkN9XR1nk_u3d8rQjOrtnCVkrwrzTGxGSM1quMGzxAqF24C3Xa70ePnnmzLSs8I8VkUZf5awwC_XDvkI62mp4x7OzQe8Z70BLuYLrzgzW7QSL8cYv4Pc0sxrBFCvaezmy9saHPj6Kcv5aeMabH6ytCVKoHQUUJl2db0JX7pmkiUiFgOpVZuIop-Oll6CrR8PSi_AtWDHq7VRI8FacvXmFzfE2-336D3R_YV_jeb81yaRibJFRyKNpctIydIdqq3atrqF"/>
+<img alt="Gut" class="h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3o0atECa-Cv7jhYZaV0XbfgFv34GR6-34m0hosJea1G1s2asIuanfvaQtu_RYWERjfTBoEkg8FNBW1OkCyX6Dt8sToQQhbiHNIR05Iv5Ro27zyrmGQ19Ko-Rt97Fg398MolQ0Y-eRQe61k1al1k5eDwNo5s9cPIA-QjyF1JspcWLPwJ4RoVOz5_7enXTFNr3cWxKYAQ9mJSFJ3w4nB8nMAGTGyw3V4wuimXwcTsuIduTM3Wt4kKn09rz6NMhhHgr8p_8KG6qMK1m0"/>
+</div>
+</div>
+<!-- Bottom Link -->
+<div class="text-center pt-4">
+<a class="text-xs text-gray-500 hover:text-gray-700 flex items-center justify-center gap-2" href="#">
+            Your Privacy Choices
+            <svg class="w-6 h-3" fill="none" viewbox="0 0 30 14" xmlns="http://www.w3.org/2000/svg">
+<path d="M7.4 12.8h6.8l3.1-11.6H7.4C4.2 1.2 1.6 3.8 1.6 7s2.6 5.8 5.8 5.8z" fill="#fff" stroke="#3b35c3" stroke-width="1.5"></path>
+<path d="M22.6 1.2h-6.8l-3.1 11.6h6.8c3.2 0 5.8-2.6 5.8-5.8s-2.6-5.8-5.8-5.8z" fill="#3b35c3"></path>
+<path d="M24.6 4l-4 4m0-4l4 4" stroke="#fff" stroke-linecap="round" stroke-width="1.5"></path>
+</svg>
+</a>
+</div>
+</div>
+</section>
+<!-- END: Right Form Section -->
+</main>
+</body></html>

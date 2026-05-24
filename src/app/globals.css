@@ -23,6 +23,11 @@
   --color-peek-blush: #FFF5F5;
   --color-peek-ivory: #FAFAFB;
 
+  /* Single brand exception: paper-cream is scoped to the /signup left
+     visual panel as an archival surface for the hand-drawn illustration.
+     Do not use elsewhere — see CLAUDE.md Design tokens. */
+  --color-paper-cream: #F4E8C1;
+
   --font-sans: var(--font-poppins);
   --font-serif: var(--font-instrument-serif);
 }

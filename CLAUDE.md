@@ -72,7 +72,7 @@ If a request implies V1.5 or V2 work, flag it and ask before building.
 | Layer | Choice |
 |---|---|
 | Frontend | **Next.js 16.2.6** (App Router, Turbopack), React 19.2, TypeScript 5.9, Tailwind 4, shadcn/ui |
-| Backend | Supabase (Postgres, Auth, Storage, RLS) — *to be added* |
+| Backend | Supabase (Postgres + Auth + RLS) via Prisma 7.x ORM with `@prisma/adapter-pg` driver. **Wired.** |
 | Agent runtime | Claude API with structured outputs and tool use — *to be added* |
 | Document engine | Attorney-reviewed templates + deterministic data binding — *V1.5* |
 | Background jobs | n8n for cron + webhooks — *to be added when needed* |
@@ -147,12 +147,46 @@ Source of truth: `DesignSystem/nextofkin-home-v1.html` for the visual language; 
 **Folder peek pastels (hero only)**
 - `peek-mint` `#F0FFF4`, `peek-blush` `#FFF5F5`, `peek-ivory` `#FAFAFB` (the lavender peek reuses `surface-lavender-200`)
 
+**Signup illustration surface (single exception)**
+- `paper-cream` `#F4E8C1` — scoped **only** to the left visual panel of `/signup` as the archival surface for the hand-drawn stairs/hearts illustration. Do not use anywhere else; the no-warm-neutrals rule below still holds for every other surface in the product.
+
 **Type**
 - **Two faces.** **Instrument Serif** (weight 400, roman + italic) is used for large section headlines and italic accent phrases. **Poppins** (weights 400/500/600/700, roman + italic) is used for body copy, eyebrows, nav, buttons, labels, and trust strip text. The accent pattern (e.g. "people you love", "what matters most", "We search") uses Instrument Serif italic — never Poppins italic for editorial accents.
 
 **Rules**
-- **No tan, cream, or warm-neutral surfaces.** Brand is strictly the cool indigo-violet family — warm neutrals were tried and rejected.
+- **No tan, cream, or warm-neutral surfaces** *(except the documented `paper-cream` exception above for the signup illustration surface)*. Brand is otherwise strictly the cool indigo-violet family — warm neutrals were tried and rejected.
 - **Dark editorial sections are contextual, not a global mode.** The `surface-deep` background is used on specific sections (e.g. "We don't stop at the will"). Do **not** wire `prefers-color-scheme: dark` or a user dark-mode toggle — there is no global dark theme in V1.
+
+### Form primitives standard
+
+All product forms (signup, intake, profile edits) use the primitives in `src/components/forms/`. The spec below is the standard — match it exactly, do not invent new sizes per page. The signup form's tight, minimal feel is the look across the product.
+
+**Imports**: `import { Button, LinkButton, TextInput, Select, DateInput, FieldLabel, Repeater, AutoSaveBadge } from "@/components/forms"`.
+
+**Inputs (`TextInput`, `Select`, `DateInput`)**
+- Shell: `h-[50px] px-4 text-[13px] bg-white rounded-lg border border-[#DFDFE4]`
+- Placeholder: `text-foreground/50`
+- Focus: `focus:outline-none focus:border-foreground/55 transition-colors`
+- Error: border becomes `#B23B3B`, `aria-invalid="true"`, error text in `#B23B3B` 12px below the field
+
+**Button**
+- Sizes: `md` (default — `h-[44px] px-6 text-sm`) and `lg` (`h-[50px] px-8 text-[14px]`)
+- Shape: always `rounded-full`, `font-medium`
+- Variants:
+  - `variant="primary"` (default) — filled. Use `tone="indigo"` (default, `bg-brand-indigo` → `bg-brand-violet` hover) for all primary CTAs including signup. `tone="ink"` (`bg-foreground` near-black) is available as an escape hatch but is not currently used in the product; signup previously used ink and was switched to indigo for brand consistency.
+  - `variant="secondary"` — outlined. `bg-transparent border border-[#DFDFE4] text-foreground hover:bg-foreground/5`. Use for Back, dismiss, and similar tertiary actions.
+- Disabled: `opacity-50`, `cursor-not-allowed`, `pointer-events-none` (handled by primitive)
+- Focus ring: `focus-visible:ring-2` matched to variant
+
+**`LinkButton`** wraps `next/link` with the same Button API. Use it for navigational buttons (e.g. `/setup`'s Continue). `disabled` prop intercepts clicks and removes from tab order.
+
+**Field label**
+- `text-sm text-foreground/70 mb-2`. Use the `label` prop on inputs to render via the standard `FieldLabel` automatically.
+
+**Auto-save**
+- `AutoSaveBadge` shows a small colored dot + status text. Wire it through `AutoSaveStatus` (`"idle" | "saving" | "saved" | "error"`). For pages with auto-save (e.g. `/about-you`), place it in `PhaseHeader`'s `rightSlot`.
+
+If a page needs a button or input that doesn't fit this spec, that's a signal the spec is incomplete — extend the primitive, don't fork inline.
 
 ---
 
