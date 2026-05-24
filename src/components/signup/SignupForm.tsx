@@ -2,48 +2,21 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Button, TextInput } from "@/components/forms";
 import { SocialAuthButtons } from "./SocialAuthButtons";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { signupAction } from "@/app/signup/actions";
 
 export function SignupForm() {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function handleAction(formData: FormData) {
     setError(null);
-    const form = e.currentTarget;
-    const data = new FormData(form);
-    const first_name = String(data.get("first_name") ?? "").trim();
-    const last_name = String(data.get("last_name") ?? "").trim();
-    const email = String(data.get("email") ?? "").trim();
-
-    if (!first_name || !last_name) {
-      setError("Please enter your first and last name.");
-      return;
-    }
-    if (!EMAIL_RE.test(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-
     startTransition(async () => {
-      const res = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ first_name, last_name, email }),
-      });
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        setError(payload.error ?? "Something went wrong. Please try again.");
-        return;
+      const result = await signupAction(formData);
+      if (!result.ok) {
+        setError(result.error);
       }
-      router.push("/setup");
-      router.refresh();
     });
   }
 
@@ -64,12 +37,13 @@ export function SignupForm() {
         </p>
       </header>
 
-      <form onSubmit={onSubmit} className="mt-7 space-y-3" noValidate>
+      <form action={handleAction} className="mt-7 space-y-3" noValidate>
         <TextInput
           name="first_name"
           type="text"
           autoComplete="given-name"
           required
+          maxLength={80}
           placeholder="First name"
           aria-label="First name"
         />
@@ -78,6 +52,7 @@ export function SignupForm() {
           type="text"
           autoComplete="family-name"
           required
+          maxLength={80}
           placeholder="Last name"
           aria-label="Last name"
         />
@@ -88,6 +63,15 @@ export function SignupForm() {
           required
           placeholder="Email"
           aria-label="Email"
+        />
+        <TextInput
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          required
+          minLength={8}
+          placeholder="Password (8+ characters)"
+          aria-label="Password"
         />
 
         {error ? (

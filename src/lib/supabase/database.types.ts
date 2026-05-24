@@ -3,4 +3,5 @@
 // or (b) Docker Desktop running so `--db-url` can spawn the generator container.
 // Until then, the supabase-js client is typed loosely. See Task 10 in
 // docs/superpowers/plans/2026-05-24-supabase-prisma-foundation.md.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Database = any;
