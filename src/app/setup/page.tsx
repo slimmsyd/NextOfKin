@@ -1,39 +1,33 @@
-import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
 import { PhaseHeader } from "@/components/setup/PhaseHeader";
 import { SetupWelcome } from "@/components/setup/SetupWelcome";
 
-type SignupCookie = {
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-};
-
-function readSignup(raw: string | undefined): SignupCookie | null {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object") return parsed as SignupCookie;
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function SetupPage() {
-  const jar = await cookies();
-  const signup = readSignup(jar.get("nok_signup")?.value);
-  const firstName = signup?.first_name?.trim() || "there";
+  const supabase = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  if (!authUser) {
+    redirect("/signup");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { authUserId: authUser.id },
+    select: { firstName: true },
+  });
+
+  if (!user) {
+    redirect("/signup");
+  }
 
   return (
     <main className="min-h-screen bg-surface-lavender-100 flex flex-col">
-      <PhaseHeader
-        phase={1}
-        phaseLabel="Welcome"
-        step={1}
-        stepCount={3}
-      />
+      <PhaseHeader phase={1} phaseLabel="Welcome" step={1} stepCount={3} />
       <div className="flex-1 flex items-start md:items-center">
-        <SetupWelcome firstName={firstName} />
+        <SetupWelcome firstName={user.firstName || "there"} />
       </div>
     </main>
   );
