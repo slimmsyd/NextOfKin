@@ -1,28 +1,155 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
-const questions = [
-  "Do you have children under 18?",
-  "Do you own a home or land?",
-  "Do you have life insurance or retirement accounts?",
-  "Have you named who would speak for you in the hospital?",
+type TriageAnswer = "Yes" | "No";
+type RecommendationKind =
+  | "will_review"
+  | "trust_conversation"
+  | "beneficiary_check"
+  | "healthcare_wishes"
+  | "trusted_contact";
+
+type TriageQuestion = {
+  id:
+    | "dependents"
+    | "real_estate"
+    | "beneficiary_accounts"
+    | "trusted_person"
+    | "healthcare_person";
+  prompt: string;
+  yesReason: string;
+  recommendations: RecommendationKind[];
+};
+
+type TriageRecommendation = {
+  kind: RecommendationKind;
+  title: string;
+  body: string;
+  reasons: string[];
+};
+
+const questions: TriageQuestion[] = [
+  {
+    id: "dependents",
+    prompt: "Do you have children under 18 or anyone who depends on you?",
+    yesReason: "Because you said you have children or dependents.",
+    recommendations: ["will_review", "trusted_contact"],
+  },
+  {
+    id: "real_estate",
+    prompt: "Do you own a home, land, or family land?",
+    yesReason: "Because you said you own home or land.",
+    recommendations: ["trust_conversation", "will_review"],
+  },
+  {
+    id: "beneficiary_accounts",
+    prompt: "Do you have life insurance, retirement, or named-beneficiary accounts?",
+    yesReason:
+      "Because you said you have accounts that may already name a beneficiary.",
+    recommendations: ["beneficiary_check"],
+  },
+  {
+    id: "trusted_person",
+    prompt: "Is there someone you trust to handle accounts or paperwork if something happened?",
+    yesReason:
+      "Because you said there is someone you trust to handle important details.",
+    recommendations: ["trusted_contact"],
+  },
+  {
+    id: "healthcare_person",
+    prompt: "Is there someone you trust to speak with doctors if you could not?",
+    yesReason:
+      "Because you said there is someone you trust for healthcare decisions.",
+    recommendations: ["healthcare_wishes"],
+  },
 ];
+
+const recommendationOrder: RecommendationKind[] = [
+  "will_review",
+  "trust_conversation",
+  "beneficiary_check",
+  "healthcare_wishes",
+  "trusted_contact",
+];
+
+const recommendationCopy: Record<
+  RecommendationKind,
+  Omit<TriageRecommendation, "reasons">
+> = {
+  will_review: {
+    kind: "will_review",
+    title: "A will may be useful to review",
+    body: "This is where families often name who should receive property, who should handle the estate, and who should care for minor children.",
+  },
+  trust_conversation: {
+    kind: "trust_conversation",
+    title: "A trust conversation may be worth having",
+    body: "Home, land, and family land can raise probate, privacy, and heirs-property questions that deserve a careful review.",
+  },
+  beneficiary_check: {
+    kind: "beneficiary_check",
+    title: "Beneficiary designations may need checking",
+    body: "Some accounts can pass by the names already on file, so the intake should compare those names against your wishes.",
+  },
+  healthcare_wishes: {
+    kind: "healthcare_wishes",
+    title: "Healthcare wishes may need documenting",
+    body: "Your plan should make it easier for your people to know who can speak up and what you would want.",
+  },
+  trusted_contact: {
+    kind: "trusted_contact",
+    title: "Executor/trusted contact choices need naming",
+    body: "NextOfKin should help you name the people your family can rely on, then keep those roles clear in your profile.",
+  },
+};
+
+const starterRecommendation: TriageRecommendation = {
+  kind: "trusted_contact",
+  title: "Start with a basic profile and trusted contacts",
+  body: "The first useful step is still simple: gather your core details, name the people you trust, and see what gaps show up in intake.",
+  reasons: [
+    "Because you did not flag a specific planning need in this preview.",
+  ],
+};
+
+function getRecommendations(answers: TriageAnswer[]): TriageRecommendation[] {
+  const reasonsByKind = new Map<RecommendationKind, string[]>();
+
+  answers.forEach((answer, index) => {
+    if (answer !== "Yes") return;
+    const question = questions[index];
+    if (!question) return;
+
+    question.recommendations.forEach((kind) => {
+      const reasons = reasonsByKind.get(kind) ?? [];
+      reasons.push(question.yesReason);
+      reasonsByKind.set(kind, reasons);
+    });
+  });
+
+  const recommendations = recommendationOrder
+    .filter((kind) => reasonsByKind.has(kind))
+    .map((kind) => ({
+      ...recommendationCopy[kind],
+      reasons: reasonsByKind.get(kind) ?? [],
+    }));
+
+  return recommendations.length > 0 ? recommendations : [starterRecommendation];
+}
 
 export function HowItWorks() {
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<("Yes" | "No")[]>([]);
+  const [answers, setAnswers] = useState<TriageAnswer[]>([]);
 
   const isDone = step >= questions.length;
   const total = questions.length;
+  const recommendations = getRecommendations(answers);
 
-  const pick = (answer: "Yes" | "No") => {
+  const pick = (answer: TriageAnswer) => {
     setAnswers([...answers, answer]);
     setStep(step + 1);
-  };
-
-  const next = () => {
-    if (step < total) setStep(step + 1);
   };
 
   const reset = () => {
@@ -43,8 +170,8 @@ export function HowItWorks() {
           Build your plan in less than an hour.
         </h2>
         <p className="mt-6 md:mt-8 text-base md:text-lg text-foreground/70 max-w-xl mx-auto leading-relaxed">
-          Answer a few questions and we&rsquo;ll guide you to the plan your
-          family needs. This is what the first hour with NextOfKin feels like.
+          Answer a few questions and see the kinds of gaps intake may surface.
+          This preview is not legal advice, and nothing here gets stored.
         </p>
       </div>
 
@@ -78,7 +205,7 @@ export function HowItWorks() {
           <div className="mt-8 md:mt-10 max-w-4xl mx-auto relative">
             <div className="bg-surface-lavender-300 rounded-3xl px-6 py-16 md:px-12 md:py-24 min-h-[320px] flex flex-col items-center justify-center">
               <h3 className="font-serif font-normal text-2xl md:text-4xl text-foreground text-center max-w-2xl leading-tight">
-                {questions[step]}
+                {questions[step]?.prompt}
               </h3>
               <div className="mt-10 md:mt-12 flex items-center gap-4">
                 {(["Yes", "No"] as const).map((label) => (
@@ -93,26 +220,6 @@ export function HowItWorks() {
                 ))}
               </div>
             </div>
-
-            <button
-              type="button"
-              aria-label="Skip to next question"
-              onClick={next}
-              className="cursor-pointer hidden md:inline-flex absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 items-center justify-center w-12 h-12 rounded-full bg-white text-foreground shadow-[0_4px_16px_-4px_rgba(10,10,15,0.15)] hover:shadow-[0_6px_20px_-4px_rgba(10,10,15,0.22)] hover:text-brand-violet transition-all"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <path d="M9 6l6 6-6 6" />
-              </svg>
-            </button>
           </div>
 
           <p className="mt-8 md:mt-10 text-center text-xs md:text-sm text-foreground/50 max-w-2xl mx-auto px-4">
@@ -121,24 +228,57 @@ export function HowItWorks() {
           </p>
         </>
       ) : (
-        <div className="mt-14 md:mt-16 max-w-3xl mx-auto bg-surface-lavender-300 rounded-3xl px-6 py-12 md:px-12 md:py-16 text-center">
-          <p className="text-[11px] md:text-xs font-medium uppercase tracking-[0.18em] text-brand-violet">
-            Your recommended plan
+        <div className="mt-14 md:mt-16 max-w-4xl mx-auto bg-surface-lavender-300 rounded-3xl px-6 py-12 md:px-12 md:py-16">
+          <div className="text-center">
+            <p className="text-[11px] md:text-xs font-medium uppercase tracking-[0.18em] text-brand-violet">
+              What your plan may need
+            </p>
+            <h3 className="mt-4 font-serif font-normal text-2xl md:text-4xl text-foreground leading-tight max-w-2xl mx-auto">
+              A few areas may be worth reviewing in intake.
+            </h3>
+            <p className="mt-5 md:mt-6 text-base md:text-lg text-foreground/70 leading-relaxed max-w-xl mx-auto">
+              These are careful flags, not legal advice. The real intake will
+              confirm what applies before anything becomes part of your profile.
+            </p>
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 gap-3 text-left">
+            {recommendations.map((recommendation) => (
+              <div
+                key={recommendation.kind}
+                className="rounded-2xl bg-white/70 border border-white px-5 py-5 md:px-6 md:py-6"
+              >
+                <h4 className="text-base md:text-lg font-semibold text-foreground leading-snug">
+                  {recommendation.title}
+                </h4>
+                <p className="mt-2 text-sm md:text-base text-foreground/70 leading-relaxed">
+                  {recommendation.body}
+                </p>
+                <ul className="mt-4 space-y-2">
+                  {recommendation.reasons.map((reason) => (
+                    <li
+                      key={reason}
+                      className="text-xs md:text-sm text-foreground/55 leading-relaxed"
+                    >
+                      {reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-8 text-center text-xs md:text-sm text-foreground/50">
+            This preview is not legal advice and does not store your answers.
           </p>
-          <h3 className="mt-4 font-serif font-normal text-2xl md:text-4xl text-foreground leading-tight max-w-2xl mx-auto">
-            A full estate plan you and your family can actually follow.
-          </h3>
-          <p className="mt-5 md:mt-6 text-base md:text-lg text-foreground/70 leading-relaxed max-w-xl mx-auto">
-            We&rsquo;ll walk you through it the rest of the way. About an
-            hour, all conversational, voice or typed.
-          </p>
+
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a
-              href="#cta"
+            <Link
+              href="/signup"
               className="cursor-pointer inline-flex items-center justify-center px-7 py-3.5 bg-brand-indigo text-white rounded-full font-medium hover:bg-brand-violet transition-colors"
             >
               Start your plan
-            </a>
+            </Link>
             <button
               type="button"
               onClick={reset}
