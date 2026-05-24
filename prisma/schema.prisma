@@ -1,0 +1,438 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// Enums (Postgres native)
+// ============================================================
+
+enum AssetType {
+  real_estate
+  account_401k
+  account_ira
+  account_brokerage
+  account_checking
+  account_savings
+  life_insurance
+  annuity
+  vehicle
+  business_interest
+  personal_property
+  other
+}
+
+enum TransferPath {
+  non_probate_designation
+  probate
+  jtwros
+  trust
+}
+
+enum AcquisitionSource {
+  inherited
+  purchased
+  gifted
+  unknown
+}
+
+enum TitleStatus {
+  sole
+  jtwros
+  tenancy_in_common
+  undivided_fractional
+  no_recorded_deed
+  unclear
+}
+
+enum BeneficiaryType {
+  person
+  entity
+}
+
+enum BeneficiaryDesignation {
+  primary
+  contingent
+}
+
+enum BeneficiarySource {
+  user_declared
+  institution_verified
+  document_inferred
+}
+
+enum EstateIntentRole {
+  residual_heir
+  specific_bequest
+}
+
+enum TrustedContactRole {
+  executor
+  attestor
+  info_recipient
+  agent_financial
+  agent_healthcare
+}
+
+enum ActorType {
+  user
+  system
+  admin
+}
+
+enum AuditAction {
+  create
+  update
+  delete
+  restore
+}
+
+enum AuditSource {
+  web
+  agent
+  system
+}
+
+enum DocumentType {
+  will
+  poa_financial
+  poa_healthcare
+  advance_directive
+  trust
+  uploaded_other
+}
+
+enum DocumentStatus {
+  draft
+  pending_review
+  finalized
+  superseded
+}
+
+enum CheckInCadence {
+  quarterly
+  annual
+  event_triggered
+}
+
+enum DeathSignalSource {
+  heartbeat
+  attestation
+  obituary
+  public_records
+  ssdmf
+}
+
+enum DisseminationMethod {
+  email
+  sms
+  postal
+  api_call
+}
+
+enum DisseminationStatus {
+  pending
+  ready
+  executed
+  reversed
+  cancelled
+}
+
+enum LifeEventType {
+  marriage
+  divorce
+  birth_or_adoption
+  death_of_relative
+  address_change
+  major_purchase
+  major_sale
+  diagnosis
+  other
+}
+
+// ============================================================
+// User
+// ============================================================
+
+model User {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authUserId  String    @unique @map("auth_user_id") @db.Uuid
+  firstName   String    @map("first_name")
+  lastName    String    @map("last_name")
+  stateCode   String    @map("state_code") @db.Char(2)
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+  phone       String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  assets            Asset[]
+  debts             Debt[]
+  beneficiaries     Beneficiary[]
+  trustedContacts   TrustedContact[]
+  documents         Document[]
+  checkIns          CheckIn[]
+  deathSignals      DeathSignal[]
+  disseminationActs DisseminationAction[]
+  lifeEvents        LifeEvent[]
+  estateIntents     EstateIntent[]
+
+  @@map("user")
+}
+
+// ============================================================
+// Asset, Debt
+// ============================================================
+
+model Asset {
+  id                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                  String             @map("user_id") @db.Uuid
+  type                    AssetType
+  institution             String?
+  identifier              String?
+  estimatedValue          Decimal?           @map("estimated_value") @db.Decimal(15, 2)
+  transferPath            TransferPath       @map("transfer_path")
+  acquisitionSource       AcquisitionSource? @map("acquisition_source")
+  titleStatus             TitleStatus?       @map("title_status")
+  deedRecorded            Boolean?           @map("deed_recorded")
+  coOwnersKnown           Boolean?           @map("co_owners_known")
+  designationLastVerified DateTime?          @map("designation_last_verified") @db.Timestamptz
+  stateCode               String             @map("state_code") @db.Char(2)
+  createdAt               DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime           @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt               DateTime?          @map("deleted_at") @db.Timestamptz
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beneficiaries AssetBeneficiary[]
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("asset")
+}
+
+model Debt {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  creditor     String
+  type         String
+  balance      Decimal?  @db.Decimal(15, 2)
+  paymentTerms String?   @map("payment_terms")
+  stateCode    String    @map("state_code") @db.Char(2)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("debt")
+}
+
+// ============================================================
+// Beneficiary + junction + EstateIntent + TrustedContact
+// ============================================================
+
+model Beneficiary {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String          @map("user_id") @db.Uuid
+  type         BeneficiaryType
+  fullName     String?         @map("full_name")
+  dateOfBirth  DateTime?       @map("date_of_birth") @db.Date
+  relationship String?
+  orgLegalName String?         @map("org_legal_name")
+  ein          String?
+  entityType   String?         @map("entity_type")
+  stateCode    String          @map("state_code") @db.Char(2)
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime?       @map("deleted_at") @db.Timestamptz
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assetDesignations AssetBeneficiary[]
+  estateIntents     EstateIntent[]
+
+  @@index([userId])
+  @@map("beneficiary")
+}
+
+model AssetBeneficiary {
+  assetId         String                 @map("asset_id") @db.Uuid
+  beneficiaryId   String                 @map("beneficiary_id") @db.Uuid
+  sharePercentage Decimal                @map("share_percentage") @db.Decimal(5, 2)
+  designation     BeneficiaryDesignation
+  source          BeneficiarySource
+  capturedAt      DateTime               @map("captured_at") @db.Timestamptz
+  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime               @updatedAt @map("updated_at") @db.Timestamptz
+
+  asset       Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  beneficiary Beneficiary @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+
+  @@id([assetId, beneficiaryId])
+  @@map("asset_beneficiary")
+}
+
+model EstateIntent {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String           @map("user_id") @db.Uuid
+  beneficiaryId   String           @map("beneficiary_id") @db.Uuid
+  sharePercentage Decimal          @map("share_percentage") @db.Decimal(5, 2)
+  role            EstateIntentRole
+  note            String?
+  stateCode       String           @map("state_code") @db.Char(2)
+  capturedAt      DateTime         @map("captured_at") @db.Timestamptz
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beneficiary Beneficiary @relation(fields: [beneficiaryId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@map("estate_intent")
+}
+
+model TrustedContact {
+  id           String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String               @map("user_id") @db.Uuid
+  type         BeneficiaryType
+  fullName     String?              @map("full_name")
+  relationship String?
+  orgLegalName String?              @map("org_legal_name")
+  entityType   String?              @map("entity_type")
+  phone        String?
+  email        String?
+  roles        TrustedContactRole[]
+  stateCode    String               @map("state_code") @db.Char(2)
+  createdAt    DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime?            @map("deleted_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("trusted_contact")
+}
+
+// ============================================================
+// Document, CheckIn, DeathSignal, DisseminationAction, LifeEvent
+// ============================================================
+
+model Document {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String         @map("user_id") @db.Uuid
+  type         DocumentType
+  version      Int            @default(1)
+  jurisdiction String         @db.Char(2)
+  status       DocumentStatus @default(draft)
+  storagePath  String?        @map("storage_path")
+  isUploaded   Boolean        @default(false) @map("is_uploaded")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime?      @map("deleted_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("document")
+}
+
+model CheckIn {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String         @map("user_id") @db.Uuid
+  cadence      CheckInCadence
+  scheduledFor DateTime       @map("scheduled_for") @db.Timestamptz
+  triggeredBy  String?        @map("triggered_by")
+  response     String?
+  outcome      String?
+  stateCode    String         @map("state_code") @db.Char(2)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime?      @map("deleted_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("check_in")
+}
+
+model DeathSignal {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String            @map("user_id") @db.Uuid
+  source     DeathSignalSource
+  confidence Decimal           @db.Decimal(5, 2)
+  timestamp  DateTime          @db.Timestamptz
+  verified   Boolean           @default(false)
+  stateCode  String            @map("state_code") @db.Char(2)
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt  DateTime?         @map("deleted_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("death_signal")
+}
+
+model DisseminationAction {
+  id         String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String              @map("user_id") @db.Uuid
+  trigger    String
+  recipient  String
+  payload    Json
+  method     DisseminationMethod
+  status     DisseminationStatus @default(pending)
+  executedAt DateTime?           @map("executed_at") @db.Timestamptz
+  stateCode  String              @map("state_code") @db.Char(2)
+  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt  DateTime?           @map("deleted_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("dissemination_action")
+}
+
+model LifeEvent {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String        @map("user_id") @db.Uuid
+  type       LifeEventType
+  occurredOn DateTime      @map("occurred_on") @db.Date
+  source     String?
+  notes      String?
+  stateCode  String        @map("state_code") @db.Char(2)
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt  DateTime?     @map("deleted_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("life_event")
+}
+
+// ============================================================
+// AuditLog
+// ============================================================
+
+model AuditLog {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  occurredAt DateTime    @default(now()) @map("occurred_at") @db.Timestamptz
+  userId     String?     @map("user_id") @db.Uuid
+  actorType  ActorType   @map("actor_type")
+  entityType String      @map("entity_type")
+  entityId   String      @map("entity_id") @db.Uuid
+  action     AuditAction
+  before     Json?
+  after      Json?
+  source     AuditSource
+  requestId  String?     @map("request_id")
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([occurredAt])
+  @@map("audit_log")
+}
