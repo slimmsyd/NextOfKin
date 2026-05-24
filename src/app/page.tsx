@@ -13,6 +13,9 @@ import { Faq } from "@/components/landing/Faq";
 import { ClosingCta } from "@/components/landing/ClosingCta";
 import { Footer } from "@/components/landing/Footer";
 
+
+
+
 export const metadata: Metadata = {
   title: "The legacy plan built for our families",
   description:
