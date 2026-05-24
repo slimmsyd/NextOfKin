@@ -1,6 +1,7 @@
 import Link from "next/link";
+import type { LandingCta } from "@/lib/landing-cta";
 
-export function ClosingCta() {
+export function ClosingCta({ cta }: { cta: LandingCta }) {
   return (
     <section id="cta" className="px-6 md:px-12 py-24 md:py-32">
       <div className="max-w-7xl mx-auto">
@@ -21,10 +22,10 @@ export function ClosingCta() {
           </p>
           <div className="relative mt-10 flex flex-col sm:flex-row gap-3">
             <Link
-              href="/signup"
+              href={cta.href}
               className="cursor-pointer inline-flex items-center justify-center px-7 py-3.5 bg-white text-brand-indigo rounded-full font-medium hover:bg-surface-lavender-200 transition-colors"
             >
-              Start your plan
+              {cta.label}
             </Link>
             <Link
               href="#faq"

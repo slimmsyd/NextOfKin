@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { signoutAction } from "@/app/signin/actions";
 
 export default async function StartPage() {
   const supabase = await createClient();
@@ -33,6 +34,14 @@ export default async function StartPage() {
         >
           Continue to setup
         </Link>
+        <form action={signoutAction} className="pt-2">
+          <button
+            type="submit"
+            className="cursor-pointer text-xs text-foreground/50 hover:text-foreground/80 transition-colors underline underline-offset-4"
+          >
+            Not you? Sign out
+          </button>
+        </form>
       </div>
     </main>
   );

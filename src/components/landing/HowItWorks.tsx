@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import type { LandingCta } from "@/lib/landing-cta";
 
 type TriageAnswer = "Yes" | "No";
 type RecommendationKind =
@@ -139,7 +140,7 @@ function getRecommendations(answers: TriageAnswer[]): TriageRecommendation[] {
   return recommendations.length > 0 ? recommendations : [starterRecommendation];
 }
 
-export function HowItWorks() {
+export function HowItWorks({ cta }: { cta: LandingCta }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<TriageAnswer[]>([]);
 
@@ -274,10 +275,10 @@ export function HowItWorks() {
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href="/signup"
+              href={cta.href}
               className="cursor-pointer inline-flex items-center justify-center px-7 py-3.5 bg-brand-indigo text-white rounded-full font-medium hover:bg-brand-violet transition-colors"
             >
-              Start your plan
+              {cta.label}
             </Link>
             <button
               type="button"

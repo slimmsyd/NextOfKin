@@ -29,7 +29,7 @@ export function SignupForm() {
         <p className="mt-2 text-[13px] text-foreground/65">
           Already have an account?{" "}
           <Link
-            href="/signup"
+            href="/signin"
             className="text-brand-indigo font-medium hover:underline cursor-pointer"
           >
             Log in

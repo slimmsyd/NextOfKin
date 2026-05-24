@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SignupSplitLayout } from "@/components/signup/SignupSplitLayout";
 import { SignupLeftPanel } from "@/components/signup/SignupLeftPanel";
-import { SignupForm } from "@/components/signup/SignupForm";
+import { SigninForm } from "@/components/signin/SigninForm";
 
-export default async function SignupPage() {
+export default async function SigninPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -15,9 +15,6 @@ export default async function SignupPage() {
   }
 
   return (
-    <SignupSplitLayout
-      left={<SignupLeftPanel />}
-      right={<SignupForm />}
-    />
+    <SignupSplitLayout left={<SignupLeftPanel />} right={<SigninForm />} />
   );
 }
