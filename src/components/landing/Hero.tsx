@@ -45,6 +45,10 @@ const trustItems = [
   },
 ];
 
+
+
+
+
 type Folder = {
   src: string;
   alt: string;
