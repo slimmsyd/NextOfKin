@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { LinkButton } from "@/components/forms";
 import { useVoiceScene } from "@/components/voice";
+import { SCENES } from "@/lib/voice/scenes";
 
 function LockIcon() {
   return (
@@ -31,65 +31,13 @@ function PlayIcon() {
 }
 
 export function SetupWelcome({ firstName }: { firstName: string }) {
-  const { status, audioRef, payload, skip, play } = useVoiceScene("welcome");
-  const [revealed, setRevealed] = useState(0);
-  const error = status === "error" ? "Couldn't load the welcome audio." : null;
-
-  // Drive text reveal off audio.currentTime via the alignment table. The rAF
-  // loop is started/stopped by the audio's own play/pause/ended events so it
-  // also restarts when the user resumes via the "Tap to hear" affordance.
-  useEffect(() => {
-    if (!payload || !audioRef.current) return;
-    const audio = audioRef.current;
-    const endTimes = payload.alignment.endTimes;
-    let raf = 0;
-    let running = false;
-
-    const tick = () => {
-      const t = audio.currentTime;
-      let lo = 0;
-      let hi = endTimes.length;
-      while (lo < hi) {
-        const mid = (lo + hi) >> 1;
-        if (endTimes[mid] <= t) lo = mid + 1;
-        else hi = mid;
-      }
-      setRevealed(lo);
-      if (running) raf = requestAnimationFrame(tick);
-    };
-
-    const start = () => {
-      if (running) return;
-      running = true;
-      raf = requestAnimationFrame(tick);
-    };
-
-    const stop = () => {
-      running = false;
-      if (raf) cancelAnimationFrame(raf);
-    };
-
-    audio.addEventListener("play", start);
-    audio.addEventListener("playing", start);
-    audio.addEventListener("pause", stop);
-    audio.addEventListener("ended", stop);
-
-    if (!audio.paused) start();
-
-    return () => {
-      stop();
-      audio.removeEventListener("play", start);
-      audio.removeEventListener("playing", start);
-      audio.removeEventListener("pause", stop);
-      audio.removeEventListener("ended", stop);
-    };
-  }, [payload, audioRef]);
-
-  const done = status === "ended" || status === "error";
-  const fullText = payload?.text ?? "";
-  // When Skip is hit or audio errors, render the full text immediately.
-  const visibleText = done ? fullText : fullText.slice(0, revealed);
+  const { status, skip, play } = useVoiceScene("welcome");
+  // Body text is sourced from the static scene definition, not from the TTS
+  // payload. The user reads in <100ms; voice plays over the text when ready.
+  const bodyText = SCENES.welcome.text;
+  const isPlaying = status === "playing";
   const needsGesture = status === "needsGesture";
+  const error = status === "error" ? "Couldn't load the welcome audio." : null;
 
   return (
     <section className="w-full max-w-2xl mx-auto px-6 md:px-10 py-14 md:py-24">
@@ -98,25 +46,8 @@ export function SetupWelcome({ firstName }: { firstName: string }) {
         <span className="italic text-brand-indigo">welcome.</span>
       </h1>
 
-      <div
-        className="mt-10 md:mt-12 text-foreground/80 text-[17px] md:text-lg leading-[1.7] min-h-[7em]"
-        aria-live="polite"
-        aria-busy={!done}
-      >
-        <p>
-          {visibleText}
-          {!done && payload ? (
-            <span
-              aria-hidden
-              className="inline-block w-[2px] h-[1em] -mb-[0.15em] ml-[2px] bg-brand-indigo align-baseline animate-pulse"
-            />
-          ) : null}
-        </p>
-        {!payload && !error ? (
-          <p className="opacity-0" aria-hidden>
-            &nbsp;
-          </p>
-        ) : null}
+      <div className="mt-10 md:mt-12 text-foreground/80 text-[17px] md:text-lg leading-[1.7]">
+        <p>{bodyText}</p>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -130,33 +61,28 @@ export function SetupWelcome({ firstName }: { firstName: string }) {
             Tap to hear the welcome
           </button>
         ) : null}
-        {payload && !done ? (
+        {isPlaying ? (
           <button
             type="button"
             onClick={skip}
             className="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm text-foreground/55 hover:text-foreground hover:bg-foreground/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-indigo/40"
-            aria-label="Skip the welcome audio and show the full text"
+            aria-label="Stop the welcome audio"
           >
-            Skip
-            <span aria-hidden>&rsaquo;&rsaquo;</span>
+            Mute
           </button>
         ) : null}
       </div>
 
       {error ? (
-        <p className="mt-4 text-sm text-[#B23B3B]">{error}</p>
+        <p className="mt-4 text-sm text-foreground/55">{error}</p>
       ) : null}
 
       <div className="mt-12 md:mt-14 flex flex-col sm:flex-row sm:items-center gap-4">
-        <LinkButton href="/setup/protect" variant="primary" disabled={!done}>
+        <LinkButton href="/setup/protect" variant="primary">
           Continue
           <span aria-hidden>&rarr;</span>
         </LinkButton>
-        <p
-          className={`text-sm text-foreground/55 transition-opacity duration-300 ${
-            done ? "opacity-100" : "opacity-0"
-          }`}
-        >
+        <p className="text-sm text-foreground/55">
           Next, we&rsquo;ll set up how you sign in.
         </p>
       </div>
