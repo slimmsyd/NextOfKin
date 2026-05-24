@@ -1,8 +1,12 @@
 import "server-only";
 
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@/generated/prisma/client";
-import { createSoftDeleteExtension } from "prisma-extension-soft-delete";
+import { PrismaClient } from "@prisma/client";
+
+// Soft-delete (prisma-extension-soft-delete@2.0.1) is incompatible with the
+// Prisma 7 client at build time. Re-introduce once the extension supports
+// Prisma 7, or replace with a manual middleware. Until then: callers must
+// filter deletedAt themselves and use UPDATE to soft-delete.
 
 declare global {
   var __prismaClient: PrismaClient | undefined;
@@ -15,31 +19,10 @@ function makeClient() {
   });
 }
 
-const basePrisma = global.__prismaClient ?? makeClient();
+export const prisma = global.__prismaClient ?? makeClient();
 
 if (process.env.NODE_ENV !== "production") {
-  global.__prismaClient = basePrisma;
+  global.__prismaClient = prisma;
 }
-
-export const prisma = basePrisma.$extends(
-  createSoftDeleteExtension({
-    models: {
-      Asset: true,
-      Debt: true,
-      Beneficiary: true,
-      EstateIntent: true,
-      TrustedContact: true,
-      Document: true,
-      CheckIn: true,
-      DeathSignal: true,
-      DisseminationAction: true,
-      LifeEvent: true,
-    },
-    defaultConfig: {
-      field: "deletedAt",
-      createValue: (deleted) => (deleted ? new Date() : null),
-    },
-  }),
-);
 
 export type Prisma = typeof prisma;
