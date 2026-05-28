@@ -1,30 +1,18 @@
 import { NextResponse } from "next/server";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { SCENES, getVoiceId, isSceneKey } from "@/lib/voice/scenes";
-import type { SceneKey } from "@/lib/voice/scenes";
+import { cacheKey, readCachedStream, writeCacheSink } from "@/lib/voice/cache";
 
 // Voice synthesis for any scene defined in src/lib/voice/scenes.ts.
-// Each scene is cached in-memory after first synthesis. Cache key is
-// scene + voice + model + text — so editing the scene text invalidates.
+// Streams MP3 bytes straight from ElevenLabs (or from the on-disk cache on
+// repeat hits). Cache key is scene + voice + model + text — editing the
+// scene text invalidates automatically.
 
 export const runtime = "nodejs";
 
 const MODEL_ID = "eleven_multilingual_v2";
 
-type VoicePayload = {
-  scene: SceneKey;
-  text: string;
-  audioBase64: string;
-  alignment: {
-    characters: string[];
-    startTimes: number[];
-    endTimes: number[];
-  };
-};
-
-const cache = new Map<string, VoicePayload>();
-
-export async function POST(
+export async function GET(
   _req: Request,
   { params }: { params: Promise<{ scene: string }> },
 ) {
@@ -43,41 +31,58 @@ export async function POST(
     );
   }
 
-  const cacheKey = `${scene.key}|${voiceId}|${MODEL_ID}|${scene.text}`;
-  const cached = cache.get(cacheKey);
+  const key = cacheKey({
+    scene: scene.key,
+    voiceId,
+    modelId: MODEL_ID,
+    text: scene.text,
+  });
+
+  const cached = await readCachedStream(key);
   if (cached) {
-    return NextResponse.json(cached);
+    return new Response(cached.stream, {
+      status: 200,
+      headers: {
+        "Content-Type": "audio/mpeg",
+        "Content-Length": String(cached.size),
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "X-Voice-Cache": "hit",
+      },
+    });
   }
 
   try {
     const client = new ElevenLabsClient({ apiKey });
-    const result = await client.textToSpeech.convertWithTimestamps(voiceId, {
+    const upstream = await client.textToSpeech.stream(voiceId, {
       text: scene.text,
       modelId: MODEL_ID,
       outputFormat: "mp3_44100_128",
     });
 
-    const alignment = result.alignment;
-    if (!alignment) {
-      return NextResponse.json(
-        { error: "No alignment returned from TTS" },
-        { status: 502 },
-      );
-    }
+    const [forResponse, forCache] = upstream.tee();
 
-    const payload: VoicePayload = {
-      scene: scene.key,
-      text: scene.text,
-      audioBase64: result.audioBase64,
-      alignment: {
-        characters: alignment.characters,
-        startTimes: alignment.characterStartTimesSeconds,
-        endTimes: alignment.characterEndTimesSeconds,
+    // Fire-and-forget pipe to the disk cache. Failure here must not affect
+    // the user-facing response.
+    void (async () => {
+      try {
+        const sink = await writeCacheSink(key);
+        await forCache.pipeTo(sink);
+      } catch (err) {
+        console.error(
+          `Voice cache write failed for scene "${scene.key}":`,
+          err,
+        );
+      }
+    })();
+
+    return new Response(forResponse, {
+      status: 200,
+      headers: {
+        "Content-Type": "audio/mpeg",
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "X-Voice-Cache": "miss",
       },
-    };
-
-    cache.set(cacheKey, payload);
-    return NextResponse.json(payload);
+    });
   } catch (err) {
     console.error(`ElevenLabs TTS failed for scene "${scene.key}":`, err);
     return NextResponse.json(

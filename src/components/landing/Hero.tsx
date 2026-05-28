@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { HeroCardArc } from "./HeroCardArc";
 import type { LandingCta } from "@/lib/landing-cta";
+import { Gallery } from "./Gallery";
 
 const trustItems = [
   {
@@ -129,9 +129,8 @@ export function Hero({ cta }: { cta: LandingCta }) {
           </ul>
         </div>
 
-        {/* === 3D card arc (client component, framer-motion) === */}
-        <div className="relative z-10 mt-12 md:mt-16 lg:mt-20 px-4">
-          <HeroCardArc />
+        <div className="relative z-10 mt-12 md:mt-16 lg:mt-20">
+          <Gallery />
         </div>
       </div>
     </section>

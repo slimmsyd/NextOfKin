@@ -12,6 +12,7 @@ import { DontStopAtTheWill } from "@/components/landing/DontStopAtTheWill";
 import { Faq } from "@/components/landing/Faq";
 import { ClosingCta } from "@/components/landing/ClosingCta";
 import { Footer } from "@/components/landing/Footer";
+import { WaitlistDialog } from "@/components/waitlist/WaitlistDialog";
 import { getLandingCta } from "@/lib/landing-cta";
 
 
@@ -52,6 +53,7 @@ export default async function HomePage() {
         <ClosingCta cta={cta} />
       </main>
       <Footer />
+      <WaitlistDialog />
     </>
   );
 }

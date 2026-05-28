@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design-reference and generated-output artifacts (not app code):
+    "design_handoff_onboarding_flow/**",
+    "graphify-out/**",
   ]),
 ]);
 

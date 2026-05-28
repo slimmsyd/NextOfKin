@@ -25,7 +25,7 @@ export async function signinAction(formData: FormData): Promise<SigninResult> {
     return { ok: false, error: error.message };
   }
 
-  redirect("/start");
+  redirect("/setup");
 }
 
 export async function signoutAction() {

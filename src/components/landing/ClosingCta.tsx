@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { LandingCta } from "@/lib/landing-cta";
+import { WaitlistTriggerLink } from "@/components/waitlist/WaitlistTriggerLink";
 
 export function ClosingCta({ cta }: { cta: LandingCta }) {
   return (
@@ -34,6 +35,13 @@ export function ClosingCta({ cta }: { cta: LandingCta }) {
               Read the FAQ
             </Link>
           </div>
+          <p className="relative mt-6 text-sm text-surface-lavender-200/80">
+            Or{" "}
+            <WaitlistTriggerLink tone="inherit" className="text-white">
+              join the waitlist instead
+            </WaitlistTriggerLink>
+            .
+          </p>
         </div>
       </div>
     </section>

@@ -157,16 +157,37 @@ enum LifeEventType {
 // User
 // ============================================================
 
+enum MfaMethod {
+  sms
+  totp
+}
+
+enum MaritalStatus {
+  single
+  married
+  domestic_partnership
+  divorced
+  widowed
+  separated
+}
+
 model User {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  authUserId  String    @unique @map("auth_user_id") @db.Uuid
-  firstName   String    @map("first_name")
-  lastName    String    @map("last_name")
-  stateCode   String    @map("state_code") @db.Char(2)
-  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authUserId  String     @unique @map("auth_user_id") @db.Uuid
+  firstName   String     @map("first_name")
+  lastName    String     @map("last_name")
+  stateCode   String     @map("state_code") @db.Char(2)
+  dateOfBirth DateTime?  @map("date_of_birth") @db.Date
   phone       String?
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  mfaMethod   MfaMethod? @map("mfa_method")
+  // Identity foundation (About You). Scalar facts as columns; the nested
+  // spouse/dependents/household captured in JSON until Phase 4 normalizes
+  // them into People-layer entities.
+  legalName       String?        @map("legal_name")
+  maritalStatus   MaritalStatus? @map("marital_status")
+  aboutYouDetails Json?          @map("about_you_details")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz
 
   assets            Asset[]
   debts             Debt[]
@@ -178,8 +199,27 @@ model User {
   disseminationActs DisseminationAction[]
   lifeEvents        LifeEvent[]
   estateIntents     EstateIntent[]
+  conversationTurns ConversationTurn[]
+  consents          Consent[]
 
   @@map("user")
+}
+
+// ============================================================
+// Consent (intake consent gate — append-only acceptance record)
+// ============================================================
+
+model Consent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  version    String
+  acceptedAt DateTime @default(now()) @map("accepted_at") @db.Timestamptz
+  ipAddress  String?  @map("ip_address")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("consent")
 }
 
 // ============================================================
@@ -415,6 +455,29 @@ model LifeEvent {
 }
 
 // ============================================================
+// ConversationTurn
+// One row per agent or user turn. Lets us resume a chapter mid-sentence
+// after a reload or weeks away. `tool_calls` captures what the agent did
+// on a given turn (model-emitted or UI-emitted via inline edit).
+// ============================================================
+
+model ConversationTurn {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  chapter   String
+  role      String
+  text      String
+  toolCalls Json?    @map("tool_calls")
+  bucket    String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, chapter, createdAt])
+  @@map("conversation_turn")
+}
+
+// ============================================================
 // AuditLog
 // ============================================================
 
@@ -435,4 +498,39 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([occurredAt])
   @@map("audit_log")
+}
+
+// ============================================================
+// Waitlist (early-access capture from the landing page)
+// ============================================================
+
+enum WaitlistGender {
+  woman
+  man
+  non_binary
+  prefer_not_to_say
+}
+
+enum WaitlistAgeBracket {
+  under_25
+  age_25_34
+  age_35_44
+  age_45_54
+  age_55_64
+  age_65_plus
+  prefer_not_to_say
+}
+
+model Waitlist {
+  id         String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email      String              @unique
+  firstName  String?             @map("first_name")
+  phone      String?
+  gender     WaitlistGender?
+  ageBracket WaitlistAgeBracket? @map("age_bracket")
+  source     String?
+  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime            @updatedAt @default(now()) @map("updated_at") @db.Timestamptz
+
+  @@map("waitlist")
 }
