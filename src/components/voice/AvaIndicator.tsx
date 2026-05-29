@@ -26,7 +26,7 @@ export function AvaIndicator({ speaking, className }: AvaIndicatorProps) {
     >
       <span
         aria-hidden
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-violet to-brand-violet-end font-serif text-[15px] italic text-white"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-brand-violet to-brand-violet-end font-serif text-[15px] italic text-white"
       >
         {AGENT_NAME.charAt(0)}
       </span>

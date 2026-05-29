@@ -4,19 +4,35 @@ import { useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 
-import { PhaseHeader } from "@/components/setup/PhaseHeader";
-import { AutoSaveBadge, type AutoSaveStatus } from "@/components/forms";
+import { type AutoSaveStatus } from "@/components/forms";
 import { applyToolCall } from "@/app/your-life/actions";
 import { ChatPane, type ChatPaneMessage } from "./ChatPane";
 import { ProfilePane } from "./ProfilePane";
-import type { AssetView, ChatTurnView, IdentityView } from "./types";
+import { YourLifeSidebar } from "./YourLifeSidebar";
+import type {
+  AssetView,
+  ChatTurnView,
+  FamilyView,
+  IdentityView,
+  SidebarSection,
+} from "./types";
 
 type ChapterShellProps = {
   identity: IdentityView;
+  family: FamilyView;
   initialAssets: AssetView[];
   initialTurns: ChatTurnView[];
   chapter: string;
 };
+
+// V1 journey sections, mirroring the ProfilePane labels. The chapter loop
+// ("What you have") is the active section; later phases are locked.
+const SECTIONS: SidebarSection[] = [
+  { label: "About you", state: "done" },
+  { label: "What you have", state: "active" },
+  { label: "Who you protect", state: "locked" },
+  { label: "Wishes & stories", state: "locked" },
+];
 
 function turnsToUIMessages(turns: ChatTurnView[]): UIMessage[] {
   return turns.map((t) => ({
@@ -76,6 +92,7 @@ function recordToAssetView(rec: AssetRecord): AssetView | null {
 
 export function ChapterShell({
   identity,
+  family,
   initialAssets,
   initialTurns,
   chapter,
@@ -187,12 +204,11 @@ export function ChapterShell({
   const isStreaming = status === "submitted" || status === "streaming";
 
   return (
-    <div className="flex flex-col h-screen bg-surface-lavender-100">
-      <PhaseHeader
-        phase={3}
-        phaseLabel="Your life · Real estate"
-        showProgress={false}
-        rightSlot={<AutoSaveBadge status={saveStatus} />}
+    <div className="flex h-screen bg-surface-lavender-100 overflow-hidden">
+      <YourLifeSidebar
+        identity={identity}
+        sections={SECTIONS}
+        phaseTitle="Your life"
       />
       <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
         <div className="md:col-span-7 flex flex-col overflow-hidden border-b md:border-b-0 md:border-r border-surface-lavender-300">
@@ -201,11 +217,13 @@ export function ChapterShell({
             isStreaming={isStreaming}
             disabled={isStreaming}
             onSubmit={onSubmit}
+            saveStatus={saveStatus}
           />
         </div>
         <div className="md:col-span-5 overflow-hidden">
           <ProfilePane
             identity={identity}
+            family={family}
             assets={assets}
             lastAddedId={lastAddedId}
             onFieldChange={onFieldChange}

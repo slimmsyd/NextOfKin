@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 
 import { VoiceNarrator } from "@/components/voice";
+import { AutoSaveBadge, type AutoSaveStatus } from "@/components/forms";
+import { AGENT_NAME } from "@/lib/voice/agent";
 import { AgentMessage } from "./AgentMessage";
 import { ChatInput } from "./ChatInput";
 import { TypingIndicator } from "./TypingIndicator";
@@ -20,21 +22,33 @@ type ChatPaneProps = {
   isStreaming: boolean;
   disabled: boolean;
   onSubmit: (text: string) => void;
+  saveStatus?: AutoSaveStatus;
 };
 
-function AgentAvatar({ status }: { status: string }) {
+function AgentAvatar({
+  status,
+  saveStatus,
+}: {
+  status: string;
+  saveStatus?: AutoSaveStatus;
+}) {
   return (
-    <div className="flex items-center gap-3 px-6 md:px-10 py-4 border-b border-surface-lavender-300 bg-surface-lavender-100/80 backdrop-blur-sm">
-      <span
-        aria-hidden
-        className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-lavender-300 text-brand-indigo font-semibold text-sm"
-      >
-        K
-      </span>
-      <div className="flex flex-col leading-tight">
-        <p className="text-[14px] font-semibold text-foreground">NextOfKin</p>
-        <p className="text-[12px] text-foreground/55">{status}</p>
+    <div className="flex items-center justify-between gap-3 px-6 md:px-10 py-4 border-b border-surface-lavender-300 bg-surface-lavender-100/80 backdrop-blur-sm">
+      <div className="flex items-center gap-3 min-w-0">
+        <span
+          aria-hidden
+          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-linear-to-br from-brand-violet to-brand-violet-end font-serif text-[15px] italic text-white"
+        >
+          {AGENT_NAME.charAt(0)}
+        </span>
+        <div className="flex flex-col leading-tight min-w-0">
+          <p className="text-[14px] font-semibold text-foreground">
+            {AGENT_NAME} <span className="font-normal text-foreground/55">· your agent</span>
+          </p>
+          <p className="text-[12px] text-foreground/55 truncate">{status}</p>
+        </div>
       </div>
+      {saveStatus ? <AutoSaveBadge status={saveStatus} /> : null}
     </div>
   );
 }
@@ -44,6 +58,7 @@ export function ChatPane({
   isStreaming,
   disabled,
   onSubmit,
+  saveStatus,
 }: ChatPaneProps) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
@@ -55,7 +70,10 @@ export function ChatPane({
 
   return (
     <section className="flex flex-col h-full bg-surface-lavender-100">
-      <AgentAvatar status={isStreaming ? "Listening" : "Here when you're ready"} />
+      <AgentAvatar
+        status={isStreaming ? "Listening" : "Here when you're ready"}
+        saveStatus={saveStatus}
+      />
       <div className="px-6 md:px-10 pt-3">
         <VoiceNarrator scene="your-life-real-estate" className="mb-1" />
       </div>

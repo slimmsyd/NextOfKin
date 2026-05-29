@@ -11,6 +11,9 @@ export type ChapterState = {
     lastName: string;
     stateCode: string;
     dateOfBirth: Date | null;
+    legalName: string | null;
+    maritalStatus: string | null;
+    aboutYouDetails: unknown;
   } | null;
   assets: Array<{
     id: string;
@@ -51,6 +54,9 @@ export async function loadChapterState(chapter: string): Promise<
       lastName: true,
       stateCode: true,
       dateOfBirth: true,
+      legalName: true,
+      maritalStatus: true,
+      aboutYouDetails: true,
     },
   });
 

@@ -7,6 +7,7 @@ import { REAL_ESTATE_OPENING } from "@/lib/yourLife/scripts/realEstateScript";
 import type {
   AssetView,
   ChatTurnView,
+  FamilyView,
   IdentityView,
 } from "@/components/yourLife/types";
 
@@ -29,28 +30,17 @@ export default async function Page() {
         bucket: "answer",
       },
     });
-
-    const seeded = await prisma.conversationTurn.findMany({
-      where: { userId: user.id, chapter: CHAPTER },
-      orderBy: { createdAt: "asc" },
-    });
-    const seededTurns: ChatTurnView[] = seeded.map((t) => ({
-      id: t.id,
-      role: t.role === "agent" ? "agent" : "user",
-      text: t.text,
-      bucket: t.bucket,
-    }));
-    return (
-      <ChapterShell
-        identity={toIdentity(user)}
-        initialAssets={assets.map(toAssetView)}
-        initialTurns={seededTurns}
-        chapter={CHAPTER}
-      />
-    );
   }
 
-  const turnViews: ChatTurnView[] = turns.map((t) => ({
+  const turnRows =
+    user && turns.length === 0
+      ? await prisma.conversationTurn.findMany({
+          where: { userId: user.id, chapter: CHAPTER },
+          orderBy: { createdAt: "asc" },
+        })
+      : turns;
+
+  const turnViews: ChatTurnView[] = turnRows.map((t) => ({
     id: t.id,
     role: t.role === "agent" ? "agent" : "user",
     text: t.text,
@@ -60,6 +50,7 @@ export default async function Page() {
   return (
     <ChapterShell
       identity={toIdentity(user)}
+      family={toFamily(user?.aboutYouDetails)}
       initialAssets={assets.map(toAssetView)}
       initialTurns={turnViews}
       chapter={CHAPTER}
@@ -73,6 +64,9 @@ type UserSummary = {
   lastName: string;
   stateCode: string;
   dateOfBirth: Date | null;
+  legalName: string | null;
+  maritalStatus: string | null;
+  aboutYouDetails: unknown;
 } | null;
 
 function toIdentity(user: UserSummary): IdentityView {
@@ -81,7 +75,26 @@ function toIdentity(user: UserSummary): IdentityView {
     firstName: user.firstName,
     lastName: user.lastName,
     stateCode: user.stateCode,
+    legalName: user.legalName,
+    dob: user.dateOfBirth ? user.dateOfBirth.toISOString().slice(0, 10) : null,
+    maritalStatus: user.maritalStatus,
   };
+}
+
+function toFamily(details: unknown): FamilyView {
+  if (!details || typeof details !== "object") return null;
+  const d = details as {
+    spouse?: { legalName?: string } | null;
+    dependents?: Array<{ name?: string }>;
+    household?: string;
+  };
+  const spouseName = d.spouse?.legalName?.trim() || null;
+  const dependentNames = (d.dependents ?? [])
+    .map((x) => x.name?.trim())
+    .filter((n): n is string => Boolean(n));
+  const household = d.household?.trim() || null;
+  if (!spouseName && dependentNames.length === 0 && !household) return null;
+  return { spouseName, dependentNames, household };
 }
 
 function toAssetView(a: {

@@ -1,13 +1,15 @@
 "use client";
 
+import { HOUSEHOLD_OPTIONS } from "@/components/aboutYou/states";
 import { AssetCard } from "./AssetCard";
 import { IdentityCard } from "./IdentityCard";
 import { SectionLabel } from "./SectionLabel";
 import { SectionPlaceholder } from "./SectionPlaceholder";
-import type { AssetView, IdentityView } from "./types";
+import type { AssetView, FamilyView, IdentityView } from "./types";
 
 type ProfilePaneProps = {
   identity: IdentityView;
+  family: FamilyView;
   assets: AssetView[];
   lastAddedId: string | null;
   onFieldChange: (
@@ -17,12 +19,53 @@ type ProfilePaneProps = {
   ) => void | Promise<void>;
 };
 
+function householdLabel(value: string): string {
+  return HOUSEHOLD_OPTIONS.find((h) => h.value === value)?.label ?? value;
+}
+
+function FamilyCard({ family }: { family: NonNullable<FamilyView> }) {
+  return (
+    <div className="rounded-xl border border-surface-lavender-300 bg-white px-5 py-4">
+      <dl className="space-y-1.5 text-sm">
+        {family.spouseName ? (
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-foreground/55">Spouse / partner</dt>
+            <dd className="text-foreground text-right">{family.spouseName}</dd>
+          </div>
+        ) : null}
+        {family.dependentNames.length > 0 ? (
+          <div className="flex items-start justify-between gap-3">
+            <dt className="text-foreground/55">Children</dt>
+            <dd className="text-foreground text-right">
+              {family.dependentNames.join(", ")}
+            </dd>
+          </div>
+        ) : null}
+        {family.household ? (
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-foreground/55">Household</dt>
+            <dd className="text-foreground text-right">
+              {householdLabel(family.household)}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+    </div>
+  );
+}
+
 export function ProfilePane({
   identity,
+  family,
   assets,
   lastAddedId,
   onFieldChange,
 }: ProfilePaneProps) {
+  const hasFamily =
+    family &&
+    (family.spouseName ||
+      family.dependentNames.length > 0 ||
+      family.household);
   return (
     <aside className="w-full h-full bg-surface-lavender-200 border-l border-surface-lavender-300 px-6 py-6 md:px-8 md:py-8 overflow-y-auto">
       <header className="flex items-center justify-between mb-6">
@@ -40,6 +83,13 @@ export function ProfilePane({
 
       <SectionLabel>About You</SectionLabel>
       <IdentityCard identity={identity} />
+
+      {hasFamily ? (
+        <>
+          <SectionLabel>Family</SectionLabel>
+          <FamilyCard family={family} />
+        </>
+      ) : null}
 
       <SectionLabel>What You Have</SectionLabel>
       {assets.length > 0 ? (

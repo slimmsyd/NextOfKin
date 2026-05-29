@@ -24,7 +24,7 @@ import {
 } from "./states";
 
 const SAVE_DEBOUNCE_MS = 800;
-const NEXT_HREF = "/your-life/real-estate";
+const NEXT_HREF = "/your-life";
 
 const EMPTY_SPOUSE: AboutYouSpouse = { legalName: "", dob: "", state: "" };
 
