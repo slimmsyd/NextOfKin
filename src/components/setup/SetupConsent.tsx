@@ -9,8 +9,8 @@ type LedgerItem = { title: string; body: string };
 
 const PROMISE: LedgerItem[] = [
   {
-    title: "We encrypt everything",
-    body: "Your record is encrypted on our servers and on your device. Not even our team reads it.",
+    title: "We encrypt and protect it",
+    body: "Your record is encrypted in transit and at rest. An AI assistant processes what you tell us to build your record. Our team does not browse it.",
   },
   {
     title: "We never sell your data",

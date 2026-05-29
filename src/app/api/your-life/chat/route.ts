@@ -111,7 +111,7 @@ export async function POST(req: Request) {
     });
   }
 
-  const turn = brain(state, userText);
+  const turn = await brain(state, userText);
 
   const stream = createUIMessageStream({
     async execute({ writer }) {

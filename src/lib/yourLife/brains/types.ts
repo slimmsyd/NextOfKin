@@ -19,11 +19,10 @@ export type ScriptedTurn = {
 
 /**
  * A chapter "brain" maps the current chapter state + the user's last message to
- * the agent's next turn. Deterministic scripts implement this today; a real
- * Claude streaming implementation can drop in later behind the same signature
- * with zero route/client changes.
+ * the agent's next turn. Async so a real model call (DeepSeek) drops in behind
+ * the same signature; deterministic scripts just resolve immediately.
  */
 export type ChapterBrain = (
   state: ChapterState,
   lastUserMessage: string,
-) => ScriptedTurn;
+) => Promise<ScriptedTurn>;
