@@ -7,6 +7,10 @@ import {
   AddRealEstateSchema,
   applyAddRealEstate,
 } from "./addRealEstate";
+import {
+  AddFinancialAccountSchema,
+  applyAddFinancialAccount,
+} from "./addFinancialAccount";
 import { AddPersonSchema, applyAddPerson } from "./addPerson";
 import {
   FlagHeirsPropertyRiskSchema,
@@ -24,6 +28,7 @@ import {
 
 export const toolSchemas = {
   add_real_estate: AddRealEstateSchema,
+  add_financial_account: AddFinancialAccountSchema,
   add_person: AddPersonSchema,
   flag_heirs_property_risk: FlagHeirsPropertyRiskSchema,
   confirm_chapter_complete: ConfirmChapterCompleteSchema,
@@ -79,6 +84,15 @@ export async function validateAndApply(
         );
         return { ok: true, name, data };
       }
+      case "add_financial_account": {
+        const data = await applyAddFinancialAccount(
+          ctx.prisma,
+          ctx.userId,
+          ctx.stateCode,
+          parsed.data as z.infer<typeof AddFinancialAccountSchema>,
+        );
+        return { ok: true, name, data };
+      }
       case "add_person": {
         const data = await applyAddPerson(
           ctx.prisma,
@@ -98,6 +112,7 @@ export async function validateAndApply(
       }
       case "confirm_chapter_complete": {
         const data = await applyConfirmChapterComplete(
+          ctx.prisma,
           ctx.userId,
           parsed.data as z.infer<typeof ConfirmChapterCompleteSchema>,
         );
@@ -105,6 +120,7 @@ export async function validateAndApply(
       }
       case "defer_chapter": {
         const data = await applyDeferChapter(
+          ctx.prisma,
           ctx.userId,
           parsed.data as z.infer<typeof DeferChapterSchema>,
         );

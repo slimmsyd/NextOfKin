@@ -1,41 +1,60 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { ChapterShell } from "@/components/yourLife/ChapterShell";
 import { loadChapterState } from "@/lib/yourLife/loadChapterState";
 import { prisma } from "@/lib/prisma";
-import { REAL_ESTATE_OPENING } from "@/lib/yourLife/scripts/realEstateScript";
+import { CHAPTERS, getChapterBySlug } from "@/lib/yourLife/chapters";
 import type {
   AssetView,
   ChatTurnView,
   FamilyView,
   IdentityView,
+  SidebarSection,
 } from "@/components/yourLife/types";
 
-const CHAPTER = "real_estate";
+export default async function ChapterPage({
+  params,
+}: {
+  params: Promise<{ chapter: string }>;
+}) {
+  const { chapter: slug } = await params;
+  const def = getChapterBySlug(slug);
+  if (!def) notFound();
 
-export default async function Page() {
-  const result = await loadChapterState(CHAPTER);
+  const result = await loadChapterState(def.id);
   if (!result.ok) redirect("/signin");
 
   const { user, assets, turns } = result.state;
+  if (!user) redirect("/signup");
 
-  // First visit to this chapter — seed the opening agent turn.
-  if (user && turns.length === 0) {
+  // First visit — seed the chapter's opening turn and mark it active.
+  if (turns.length === 0) {
     await prisma.conversationTurn.create({
       data: {
         userId: user.id,
-        chapter: CHAPTER,
+        chapter: def.id,
         role: "agent",
-        text: REAL_ESTATE_OPENING,
+        text: def.opening,
         bucket: "answer",
       },
     });
+    await prisma.chapterProgress.upsert({
+      where: { userId_chapter: { userId: user.id, chapter: def.id } },
+      create: {
+        userId: user.id,
+        chapter: def.id,
+        status: "active",
+        startedAt: new Date(),
+      },
+      update: {},
+    });
   }
 
+  // Reload turns if we just seeded, otherwise use what we loaded.
   const turnRows =
-    user && turns.length === 0
+    turns.length === 0
       ? await prisma.conversationTurn.findMany({
-          where: { userId: user.id, chapter: CHAPTER },
+          where: { userId: user.id, chapter: def.id },
           orderBy: { createdAt: "asc" },
         })
       : turns;
@@ -47,15 +66,37 @@ export default async function Page() {
     bucket: t.bucket,
   }));
 
+  const progress = await prisma.chapterProgress.findMany({
+    where: { userId: user.id },
+    select: { chapter: true, status: true },
+  });
+
   return (
     <ChapterShell
       identity={toIdentity(user)}
-      family={toFamily(user?.aboutYouDetails)}
+      family={toFamily(user.aboutYouDetails)}
+      sections={computeSections(progress)}
       initialAssets={assets.map(toAssetView)}
       initialTurns={turnViews}
-      chapter={CHAPTER}
+      chapter={def.id}
     />
   );
+}
+
+function computeSections(
+  progress: Array<{ chapter: string; status: string }>,
+): SidebarSection[] {
+  const statusByChapter = new Map(progress.map((p) => [p.chapter, p.status]));
+  const allChaptersDone = CHAPTERS.every((c) => {
+    const s = statusByChapter.get(c.id);
+    return s === "complete" || s === "deferred";
+  });
+  return [
+    { label: "About you", state: "done" },
+    { label: "What you have", state: allChaptersDone ? "done" : "active" },
+    { label: "Who you protect", state: "locked" },
+    { label: "Wishes & stories", state: "locked" },
+  ];
 }
 
 type UserSummary = {
@@ -67,10 +108,9 @@ type UserSummary = {
   legalName: string | null;
   maritalStatus: string | null;
   aboutYouDetails: unknown;
-} | null;
+};
 
 function toIdentity(user: UserSummary): IdentityView {
-  if (!user) return null;
   return {
     firstName: user.firstName,
     lastName: user.lastName,

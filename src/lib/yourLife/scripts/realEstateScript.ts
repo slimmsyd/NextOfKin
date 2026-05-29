@@ -1,19 +1,7 @@
 import "server-only";
 
 import type { ChapterState } from "@/lib/yourLife/loadChapterState";
-
-export type ScriptedTurn = {
-  text: string;
-  toolCalls: Array<{ name: string; args: Record<string, unknown> }>;
-  bucket:
-    | "answer"
-    | "clarify"
-    | "legal_advice"
-    | "financial_advice"
-    | "distress"
-    | "off_topic"
-    | "jailbreak";
-};
+import type { ScriptedTurn } from "@/lib/yourLife/brains/types";
 
 const LEGAL_KEYWORDS = [
   "legally",

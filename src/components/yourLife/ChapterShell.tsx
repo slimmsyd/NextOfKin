@@ -20,19 +20,11 @@ import type {
 type ChapterShellProps = {
   identity: IdentityView;
   family: FamilyView;
+  sections: SidebarSection[];
   initialAssets: AssetView[];
   initialTurns: ChatTurnView[];
   chapter: string;
 };
-
-// V1 journey sections, mirroring the ProfilePane labels. The chapter loop
-// ("What you have") is the active section; later phases are locked.
-const SECTIONS: SidebarSection[] = [
-  { label: "About you", state: "done" },
-  { label: "What you have", state: "active" },
-  { label: "Who you protect", state: "locked" },
-  { label: "Wishes & stories", state: "locked" },
-];
 
 function turnsToUIMessages(turns: ChatTurnView[]): UIMessage[] {
   return turns.map((t) => ({
@@ -93,6 +85,7 @@ function recordToAssetView(rec: AssetRecord): AssetView | null {
 export function ChapterShell({
   identity,
   family,
+  sections,
   initialAssets,
   initialTurns,
   chapter,
@@ -120,7 +113,7 @@ export function ChapterShell({
     const output = data.output as AssetRecord | undefined;
     if (!toolName || !output) return;
 
-    if (toolName === "add_real_estate") {
+    if (toolName === "add_real_estate" || toolName === "add_financial_account") {
       const view = recordToAssetView(output);
       if (!view) return;
       setAssets((prev) =>
@@ -207,7 +200,7 @@ export function ChapterShell({
     <div className="flex h-screen bg-surface-lavender-100 overflow-hidden">
       <YourLifeSidebar
         identity={identity}
-        sections={SECTIONS}
+        sections={sections}
         phaseTitle="Your life"
       />
       <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden">

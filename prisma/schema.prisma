@@ -201,8 +201,36 @@ model User {
   estateIntents     EstateIntent[]
   conversationTurns ConversationTurn[]
   consents          Consent[]
+  chapterProgress   ChapterProgress[]
 
   @@map("user")
+}
+
+// ============================================================
+// ChapterProgress (Phase 3 chapter loop — per-user, per-chapter status)
+// ============================================================
+
+enum ChapterStatus {
+  not_started
+  active
+  complete
+  deferred
+}
+
+model ChapterProgress {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String        @map("user_id") @db.Uuid
+  chapter     String
+  status      ChapterStatus @default(not_started)
+  deferReason String?       @map("defer_reason")
+  startedAt   DateTime?     @map("started_at") @db.Timestamptz
+  completedAt DateTime?     @map("completed_at") @db.Timestamptz
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chapter])
+  @@map("chapter_progress")
 }
 
 // ============================================================

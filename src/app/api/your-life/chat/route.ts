@@ -10,7 +10,8 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { validateAndApply } from "@/lib/yourLife/tools";
 import { loadChapterState } from "@/lib/yourLife/loadChapterState";
-import { nextTurn } from "@/lib/yourLife/scripts/realEstateScript";
+import { getChapter } from "@/lib/yourLife/chapters";
+import { getBrain } from "@/lib/yourLife/brains";
 
 export const runtime = "nodejs";
 
@@ -59,6 +60,12 @@ export async function POST(req: Request) {
   const messages: IncomingMessage[] = body.messages;
   const chapter: string = body.chapter ?? "real_estate";
 
+  const chapterDef = getChapter(chapter);
+  const brain = getBrain(chapter);
+  if (!chapterDef || !brain) {
+    return NextResponse.json({ error: "Unknown chapter" }, { status: 400 });
+  }
+
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) {
@@ -81,7 +88,8 @@ export async function POST(req: Request) {
 
   const userText = lastUserText(messages);
 
-  // Persist the user turn first so resume reflects the full transcript.
+  // Persist the user turn first so resume reflects the full transcript, and
+  // mark the chapter active on first interaction (no-op if already started).
   if (userText) {
     await prisma.conversationTurn.create({
       data: {
@@ -91,9 +99,19 @@ export async function POST(req: Request) {
         text: userText,
       },
     });
+    await prisma.chapterProgress.upsert({
+      where: { userId_chapter: { userId: userRow.id, chapter } },
+      create: {
+        userId: userRow.id,
+        chapter,
+        status: "active",
+        startedAt: new Date(),
+      },
+      update: {},
+    });
   }
 
-  const turn = nextTurn(state, userText);
+  const turn = brain(state, userText);
 
   const stream = createUIMessageStream({
     async execute({ writer }) {

@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { getChapter } from "@/lib/yourLife/chapters";
 
 export type ChapterState = {
   authUserId: string;
@@ -67,8 +68,11 @@ export async function loadChapterState(chapter: string): Promise<
     };
   }
 
+  // Which asset types belong to this chapter comes from the registry, so a new
+  // chapter loads the right assets without touching this query.
+  const assetTypes = getChapter(chapter)?.assetTypes ?? [];
   const assetRows = await prisma.asset.findMany({
-    where: { userId: user.id, type: "real_estate", deletedAt: null },
+    where: { userId: user.id, type: { in: assetTypes }, deletedAt: null },
     orderBy: { createdAt: "asc" },
   });
 

@@ -45,6 +45,36 @@ function LandIcon() {
   );
 }
 
+function BankIcon() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      className="w-4 h-4 text-brand-indigo"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 10 12 4l9 6" />
+      <path d="M5 10v8M9 10v8M15 10v8M19 10v8" />
+      <path d="M3 21h18" />
+    </svg>
+  );
+}
+
+function isAccountType(type: string): boolean {
+  return type.startsWith("account_");
+}
+
+function formatMoney(value: string | null): string {
+  if (!value) return "We'll check";
+  const n = Number(value);
+  if (Number.isNaN(n)) return value;
+  return `$${n.toLocaleString("en-US")}`;
+}
+
 function ownershipLabel(s: string | null): string {
   switch (s) {
     case "sole":
@@ -76,12 +106,15 @@ type AssetCardProps = {
 
 export function AssetCard({ asset, justAdded, onFieldChange }: AssetCardProps) {
   const prefersReduced = useReducedMotion();
+  const isAccount = isAccountType(asset.type);
   const isInherited = asset.acquisitionSource === "inherited";
-  const showHeirsRisk = heirsPropertyRisk({
-    acquisitionSource: asset.acquisitionSource,
-    titleStatus: asset.titleStatus,
-    deedRecorded: asset.deedRecorded,
-  });
+  const showHeirsRisk =
+    !isAccount &&
+    heirsPropertyRisk({
+      acquisitionSource: asset.acquisitionSource,
+      titleStatus: asset.titleStatus,
+      deedRecorded: asset.deedRecorded,
+    });
 
   return (
     <motion.article
@@ -97,11 +130,11 @@ export function AssetCard({ asset, justAdded, onFieldChange }: AssetCardProps) {
     >
       <header className="flex items-center justify-between gap-2">
         <h4 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
-          {isInherited ? <LandIcon /> : <HomeIcon />}
+          {isAccount ? <BankIcon /> : isInherited ? <LandIcon /> : <HomeIcon />}
           <InlineEditableField
             label=""
             value={asset.label}
-            placeholder="Untitled property"
+            placeholder={isAccount ? "Institution" : "Untitled property"}
             align="left"
             onCommit={(next) => onFieldChange(asset.id, "label", next)}
           />
@@ -118,40 +151,57 @@ export function AssetCard({ asset, justAdded, onFieldChange }: AssetCardProps) {
         ) : null}
       </header>
 
-      <dl className="mt-2 text-sm divide-y divide-surface-lavender-300/60">
-        <InlineEditableField
-          label="Location"
-          value={asset.location}
-          placeholder="Where is it?"
-          onCommit={(next) => onFieldChange(asset.id, "location", next)}
-        />
-        <div className="flex items-center justify-between py-1.5">
-          <dt className="text-foreground/55">Ownership</dt>
-          <dd className="text-foreground text-sm">
-            {ownershipLabel(asset.titleStatus)}
-          </dd>
-        </div>
-        <div className="flex items-center justify-between py-1.5">
-          <dt className="text-foreground/55">Source</dt>
-          <dd className="text-foreground text-sm capitalize">
-            {asset.acquisitionSource ?? "We'll check"}
-          </dd>
-        </div>
-        <div className="flex items-center justify-between py-1.5">
-          <dt className="text-foreground/55">Deed</dt>
-          <dd
-            className={`text-sm ${
-              showHeirsRisk ? "text-amber-700" : "text-foreground"
-            }`}
-          >
-            {asset.deedRecorded === true
-              ? "Recorded"
-              : asset.deedRecorded === false
-                ? "Not recorded"
-                : "We'll check"}
-          </dd>
-        </div>
-      </dl>
+      {isAccount ? (
+        <dl className="mt-2 text-sm divide-y divide-surface-lavender-300/60">
+          <div className="flex items-center justify-between py-1.5">
+            <dt className="text-foreground/55">Type</dt>
+            <dd className="text-foreground text-sm">
+              {asset.location ?? "Account"}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between py-1.5">
+            <dt className="text-foreground/55">Estimated value</dt>
+            <dd className="text-foreground text-sm">
+              {formatMoney(asset.estimatedValue)}
+            </dd>
+          </div>
+        </dl>
+      ) : (
+        <dl className="mt-2 text-sm divide-y divide-surface-lavender-300/60">
+          <InlineEditableField
+            label="Location"
+            value={asset.location}
+            placeholder="Where is it?"
+            onCommit={(next) => onFieldChange(asset.id, "location", next)}
+          />
+          <div className="flex items-center justify-between py-1.5">
+            <dt className="text-foreground/55">Ownership</dt>
+            <dd className="text-foreground text-sm">
+              {ownershipLabel(asset.titleStatus)}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between py-1.5">
+            <dt className="text-foreground/55">Source</dt>
+            <dd className="text-foreground text-sm capitalize">
+              {asset.acquisitionSource ?? "We'll check"}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between py-1.5">
+            <dt className="text-foreground/55">Deed</dt>
+            <dd
+              className={`text-sm ${
+                showHeirsRisk ? "text-amber-700" : "text-foreground"
+              }`}
+            >
+              {asset.deedRecorded === true
+                ? "Recorded"
+                : asset.deedRecorded === false
+                  ? "Not recorded"
+                  : "We'll check"}
+            </dd>
+          </div>
+        </dl>
+      )}
 
       {showHeirsRisk ? <HeirsPropertyCallout /> : null}
     </motion.article>
