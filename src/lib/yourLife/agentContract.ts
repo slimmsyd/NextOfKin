@@ -4,30 +4,28 @@ import type { ModelMessage } from "ai";
 import type { ChapterState } from "@/lib/yourLife/loadChapterState";
 import type { ChapterId } from "@/lib/yourLife/chapters";
 
-// The agent's contract: system prompt + context assembly. This is the single
-// source of truth for how the model is instructed. The evals harness mirrors
-// the same prompt via agent-contract.json (keep them in sync).
+// The agent's contract. The turn is SPLIT into two single-job model calls:
+//   1) EXTRACTION — emit tool calls for what was stated (no prose).
+//   2) REPLY — warm conversation that truthfully acknowledges what was captured.
+// The evals harness mirrors the extraction prompt via agent-contract.json.
 
 const RECENT_TURNS = 12;
 
-const BASE_RULES = `You are Ava, a calm, warm guide helping someone in North Carolina build a record of what they own, so it reaches the people they love. You are not a lawyer or a financial advisor.
+export type InputMethod = "voice" | "text";
 
-How you talk:
-- Plain language, short. One thing at a time. No jargon, no legalese, no bulleted interrogations.
-- Warm and unhurried. Keep replies to 1-3 sentences.
+export type ToolCall = { name: string; args: Record<string, unknown> };
 
-How you capture:
-- Record facts with tools as the person states them. Call the tool in the SAME turn they say it — do not wait for a later turn. You can ask a follow-up question and record at the same time.
-- ACCURACY IS SACRED. Only record what the person explicitly said. If a detail wasn't stated, leave it null. Never invent a value, a name, or a number, and never guess a balance or an address. Empty is safe; invented is harmful.
-- ENTITY RESOLUTION: the current record below lists existing items with their IDs. If the person is talking about one that already exists, call the tool with that id to UPDATE it. Never create a duplicate.
-
-Boundaries:
-- If asked for legal or financial advice (e.g. "is this valid?", "should I invest?"), gently decline, say a real attorney or advisor will help with that later, and continue. Do not advise.
-- When the chapter's facts are captured and the person has nothing to add, call confirm_chapter_complete. If they want to skip for now, call defer_chapter.`;
+// Binding fields per tool: captured values that get a voice read-back (the
+// fields where a misheard digit/name is costly). See CONTEXT.md "Binding field".
+const BINDING_ARGS: Record<string, string[]> = {
+  upsert_asset: ["estimated_value"],
+  add_financial_account: ["estimated_value"],
+  add_person: ["full_name", "date_of_birth"],
+};
 
 const CHAPTER_GOALS: Record<ChapterId, string> = {
-  real_estate: `This chapter: capture the person's REAL ESTATE — their home and any land or other property. Use upsert_asset to add or update a property. Inherited family land without a clear deed is common; if you hear it, capture it and you may flag_heirs_property_risk — but never lecture.`,
-  financial_accounts: `This chapter: capture the person's FINANCIAL ACCOUNTS — checking, savings, retirement (401k, IRA), and brokerage. Use upsert_asset to add or update each account.`,
+  real_estate: `REAL ESTATE — the person's home and any land or other property. Use upsert_asset to add or update a property. Inherited family land without a clear deed is common; capture it and you may flag_heirs_property_risk.`,
+  financial_accounts: `FINANCIAL ACCOUNTS — checking, savings, retirement (401k, IRA), brokerage. Use upsert_asset (or add_financial_account) to add or update each account.`,
 };
 
 function fmt(value: string | null | undefined, fallback = "unknown"): string {
@@ -53,12 +51,108 @@ export function serializeProfile(state: ChapterState): string {
   return `${who}\n${items}`;
 }
 
-export function buildSystemPrompt(
+// ---------- Extraction call (single job: emit tool calls) ----------
+
+const EXTRACTION_RULES = `You are the capture engine for an estate-intake conversation. Your ONLY job is to emit tool calls for what the person stated THIS turn. You do not write any prose reply.
+
+Rules:
+- Capture EARLY: create a row the moment a thing is identifiable (an address, "our home", an account). Do not wait for more detail.
+- Leave unknown fields null. NEVER invent a value, a name, a number, an address, or a balance. Empty is safe; invented is harmful.
+- ENTITY RESOLUTION: the record below lists existing items with their IDs. If the person refers to one that already exists, call the tool with that id to UPDATE it. Never create a duplicate.
+- Do not re-capture what is unchanged. If the person stated nothing new and gave no instruction, emit NO tool call.
+- Do not re-ask or re-record what the chapter opening already implied (the chapter is about things they own).
+- When the person signals they have nothing more to add, call confirm_chapter_complete. If they want to skip for now, call defer_chapter.
+
+This chapter's focus: `;
+
+export function buildExtractionSystem(
   chapterId: ChapterId,
   state: ChapterState,
 ): string {
   const goal = CHAPTER_GOALS[chapterId] ?? "";
-  return `${BASE_RULES}\n\n${goal}\n\n--- CURRENT RECORD ---\n${serializeProfile(state)}`;
+  return `${EXTRACTION_RULES}${goal}\n\n--- CURRENT RECORD ---\n${serializeProfile(state)}`;
+}
+
+// ---------- Reply call (single job: warm, truthful conversation) ----------
+
+const REPLY_RULES = `You are Ava, a calm, warm guide helping someone in North Carolina build a record of what they own, so it reaches the people they love. You are not a lawyer or a financial advisor. You write ONLY the conversational reply — capturing facts happens separately, so never mention "recording" mechanics.
+
+Voice and tone:
+- Plain language, no jargon. Warm, unhurried, a trusted person, not a form.
+- Keep replies to 1-3 short sentences. One thing at a time.
+- NEVER use em dashes. Use periods, commas, or parentheses.
+- Frame around the people they love and what they've built. Never be clinical about death. If emotional weight surfaces, acknowledge it briefly in a sentence, then keep moving.
+- Never re-ask something already answered or already on the record.
+- Education on demand only: if they ask what a term means, answer in one sentence, then ask the next thing.
+- If they ask for legal or financial advice, gently decline and say a real attorney or advisor will help with that later, then continue. Do not advise.
+- Inherited family land without a clear deed (heirs property) is common; you may gently name it, but never lecture.
+
+Truthful acknowledgment:
+- Acknowledge ONLY what was actually captured this turn (listed below). Never promise to record something ("let me record that") — it already happened.
+- READ-BACK: `;
+
+function describeCall(c: ToolCall): string {
+  const a = c.args;
+  switch (c.name) {
+    case "upsert_asset": {
+      const verb = a.id ? "Updated" : "Added";
+      const loc = a.location ? ` at ${a.location}` : "";
+      const val = a.estimated_value != null ? `, value ${a.estimated_value}` : "";
+      return `${verb} property "${a.label ?? "unnamed"}"${loc}${val}`;
+    }
+    case "add_financial_account":
+      return `Added account: ${a.institution ?? ""} ${a.account_type ?? ""}`.trim();
+    case "add_person":
+      return `Added person: ${a.full_name ?? ""}`.trim();
+    case "flag_heirs_property_risk":
+      return "Flagged a property as possible heirs property";
+    case "confirm_chapter_complete":
+      return "Chapter complete — warmly invite them to the next section (who you protect)";
+    case "defer_chapter":
+      return "Chapter deferred for now";
+    default:
+      return `Tool: ${c.name}`;
+  }
+}
+
+function summarizeCaptured(
+  toolCalls: ToolCall[],
+  inputMethod: InputMethod,
+): { captured: string; readback: string } {
+  if (toolCalls.length === 0) {
+    return {
+      captured: "Nothing new was captured this turn.",
+      readback:
+        "Nothing to read back. If they asked a question, answer it briefly, then ask the next thing.",
+    };
+  }
+
+  const readbackVals: string[] = [];
+  if (inputMethod === "voice") {
+    for (const c of toolCalls) {
+      for (const key of BINDING_ARGS[c.name] ?? []) {
+        const v = c.args[key];
+        if (v != null && v !== "") {
+          readbackVals.push(`${key.replace(/_/g, " ")} = ${String(v)}`);
+        }
+      }
+    }
+  }
+
+  const readback = readbackVals.length
+    ? `These were captured by VOICE and may be misheard, so restate them naturally and invite a correction: ${readbackVals.join("; ")}.`
+    : "No read-back needed this turn.";
+
+  return { captured: toolCalls.map(describeCall).join("; "), readback };
+}
+
+export function buildReplySystem(
+  state: ChapterState,
+  toolCalls: ToolCall[],
+  inputMethod: InputMethod,
+): string {
+  const { captured, readback } = summarizeCaptured(toolCalls, inputMethod);
+  return `${REPLY_RULES}${readback}\n\nWhat was captured this turn: ${captured}\n\n--- CURRENT RECORD ---\n${serializeProfile(state)}`;
 }
 
 /** Recent turns as model messages + the current user message appended. */

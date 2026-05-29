@@ -71,9 +71,10 @@ def serialize_profile(profile: dict) -> str:
 
 
 def build_system(contract: dict, profile: dict) -> str:
+    # Mirrors buildExtractionSystem in agentContract.ts (the capture path).
     goal = contract["chapterGoals"][CHAPTER]
     return (
-        f"{contract['baseRules']}\n\n{goal}\n\n--- CURRENT RECORD ---\n"
+        f"{contract['extractionRules']}{goal}\n\n--- CURRENT RECORD ---\n"
         + serialize_profile(profile)
     )
 

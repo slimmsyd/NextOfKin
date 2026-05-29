@@ -38,6 +38,11 @@ function lastUserText(messages: IncomingMessage[]): string {
   return "";
 }
 
+// Backstop for the no-em-dash product rule (model output is user-facing).
+function sanitizeReply(text: string): string {
+  return text.replace(/\s*[—–]\s*/g, ", ");
+}
+
 async function streamReplyText(writer: UIMessageStreamWriter, text: string) {
   const id = `text-${randomUUID()}`;
   writer.write({ type: "text-start", id });
@@ -59,6 +64,8 @@ export async function POST(req: Request) {
 
   const messages: IncomingMessage[] = body.messages;
   const chapter: string = body.chapter ?? "real_estate";
+  const inputMethod: "voice" | "text" =
+    body.inputMethod === "voice" ? "voice" : "text";
 
   const chapterDef = getChapter(chapter);
   const brain = getBrain(chapter);
@@ -111,7 +118,8 @@ export async function POST(req: Request) {
     });
   }
 
-  const turn = await brain(state, userText);
+  const turn = await brain(state, userText, { inputMethod });
+  const replyText = sanitizeReply(turn.text);
 
   const stream = createUIMessageStream({
     async execute({ writer }) {
@@ -147,8 +155,15 @@ export async function POST(req: Request) {
         }
       }
 
+      if (appliedResults.length) {
+        console.log(
+          "[route] applied tools:",
+          appliedResults.map((r) => r.name).join(", "),
+        );
+      }
+
       // Then stream the agent reply text.
-      await streamReplyText(writer, turn.text);
+      await streamReplyText(writer, replyText);
 
       writer.write({ type: "finish" });
 
@@ -158,7 +173,7 @@ export async function POST(req: Request) {
           userId: userRow.id,
           chapter,
           role: "agent",
-          text: turn.text,
+          text: replyText,
           toolCalls: appliedResults.length
             ? (appliedResults as unknown as object[])
             : undefined,

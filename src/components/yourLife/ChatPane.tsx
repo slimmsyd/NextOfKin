@@ -21,7 +21,7 @@ type ChatPaneProps = {
   messages: ChatPaneMessage[];
   isStreaming: boolean;
   disabled: boolean;
-  onSubmit: (text: string) => void;
+  onSubmit: (text: string, inputMethod: "voice" | "text") => void;
   saveStatus?: AutoSaveStatus;
 };
 

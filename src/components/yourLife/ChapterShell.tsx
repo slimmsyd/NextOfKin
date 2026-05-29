@@ -110,42 +110,24 @@ export function ChapterShell({
 
   // onData receives every raw stream chunk; tool outputs land here without
   // forcing us to setState inside an effect that watches `messages`.
+  // Shape-driven (not tool-name-driven): any tool whose output is an asset row
+  // (has an id) upserts into the pane. Covers upsert_asset, add_*,
+  // flag_heirs_property_risk, update_asset_field, and any future asset tool.
+  // Non-asset outputs (confirm/defer chapter) have no id and are ignored.
   const onData = (data: { type: string } & Record<string, unknown>) => {
     if (data.type !== "tool-output-available") return;
-    const toolName = data.toolName as string | undefined;
     const output = data.output as AssetRecord | undefined;
-    if (!toolName || !output) return;
-
-    if (toolName === "add_real_estate" || toolName === "add_financial_account") {
-      const view = recordToAssetView(output);
-      if (!view) return;
-      setAssets((prev) =>
-        prev.some((a) => a.id === view.id) ? prev : [...prev, view],
-      );
-      setLastAddedId(view.id);
-      if (lastAddedTimer.current) clearTimeout(lastAddedTimer.current);
-      lastAddedTimer.current = setTimeout(() => setLastAddedId(null), 4000);
-    } else if (toolName === "flag_heirs_property_risk") {
-      setAssets((prev) =>
-        prev.map((a) =>
-          a.id === output.id
-            ? {
-                ...a,
-                titleStatus: output.titleStatus ?? a.titleStatus,
-                deedRecorded:
-                  output.deedRecorded === undefined
-                    ? a.deedRecorded
-                    : output.deedRecorded,
-              }
-            : a,
-        ),
-      );
-    } else if (toolName === "update_asset_field") {
-      const view = recordToAssetView(output);
-      if (view) {
-        setAssets((prev) => prev.map((a) => (a.id === view.id ? view : a)));
-      }
-    }
+    if (!output) return;
+    const view = recordToAssetView(output);
+    if (!view) return;
+    setAssets((prev) =>
+      prev.some((a) => a.id === view.id)
+        ? prev.map((a) => (a.id === view.id ? view : a))
+        : [...prev, view],
+    );
+    setLastAddedId(view.id);
+    if (lastAddedTimer.current) clearTimeout(lastAddedTimer.current);
+    lastAddedTimer.current = setTimeout(() => setLastAddedId(null), 4000);
   };
 
   const { messages, sendMessage, status } = useChat({
@@ -166,8 +148,8 @@ export function ChapterShell({
   const saveStatus: AutoSaveStatus =
     editSaveStatus !== "idle" ? editSaveStatus : chatDerivedStatus;
 
-  const onSubmit = (text: string) => {
-    sendMessage({ text });
+  const onSubmit = (text: string, inputMethod: "voice" | "text") => {
+    sendMessage({ text }, { body: { inputMethod } });
   };
 
   const onFieldChange = async (

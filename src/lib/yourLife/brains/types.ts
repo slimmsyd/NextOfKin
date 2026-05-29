@@ -17,6 +17,11 @@ export type ScriptedTurn = {
   bucket: TurnBucket;
 };
 
+export type BrainContext = {
+  /** How the user's latest message arrived. Drives voice read-back of binding fields. */
+  inputMethod?: "voice" | "text";
+};
+
 /**
  * A chapter "brain" maps the current chapter state + the user's last message to
  * the agent's next turn. Async so a real model call (DeepSeek) drops in behind
@@ -25,4 +30,5 @@ export type ScriptedTurn = {
 export type ChapterBrain = (
   state: ChapterState,
   lastUserMessage: string,
+  ctx?: BrainContext,
 ) => Promise<ScriptedTurn>;

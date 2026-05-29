@@ -6,7 +6,7 @@ import { useSpeechRecognition } from "@/lib/yourLife/useSpeechRecognition";
 
 type ChatInputProps = {
   disabled: boolean;
-  onSubmit: (text: string) => void;
+  onSubmit: (text: string, inputMethod: "voice" | "text") => void;
 };
 
 function MicIcon({ listening }: { listening: boolean }) {
@@ -49,8 +49,12 @@ function SendIcon() {
 export function ChatInput({ disabled, onSubmit }: ChatInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  // Tracks whether the pending text came from the mic (drives voice read-back of
+  // binding fields). Flips to false the moment the user types manually.
+  const voiceUsedRef = useRef(false);
 
   const onFinalTranscript = (text: string) => {
+    voiceUsedRef.current = true;
     setValue((prev) => (prev ? `${prev} ${text}` : text));
   };
 
@@ -68,8 +72,9 @@ export function ChatInput({ disabled, onSubmit }: ChatInputProps) {
   const submit = () => {
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
-    onSubmit(trimmed);
+    onSubmit(trimmed, voiceUsedRef.current ? "voice" : "text");
     setValue("");
+    voiceUsedRef.current = false;
     stop();
   };
 
@@ -95,7 +100,10 @@ export function ChatInput({ disabled, onSubmit }: ChatInputProps) {
         <textarea
           ref={textareaRef}
           value={displayValue}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            voiceUsedRef.current = false;
+            setValue(e.target.value);
+          }}
           onKeyDown={onKeyDown}
           placeholder="Type or tap the mic"
           rows={1}

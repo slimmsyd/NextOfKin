@@ -2,7 +2,11 @@ import "server-only";
 
 import { generateText, tool } from "ai";
 import { getAgentModel } from "@/lib/yourLife/llm";
-import { buildMessages, buildSystemPrompt } from "@/lib/yourLife/agentContract";
+import {
+  buildExtractionSystem,
+  buildMessages,
+  buildReplySystem,
+} from "@/lib/yourLife/agentContract";
 import type { ChapterId } from "@/lib/yourLife/chapters";
 import { UpsertAssetSchema } from "@/lib/yourLife/tools/upsertAsset";
 import { FlagHeirsPropertyRiskSchema } from "@/lib/yourLife/tools/flagHeirsPropertyRisk";
@@ -45,30 +49,45 @@ function realEstateTools() {
 }
 
 /**
- * DeepSeek-backed brain. Assembles context (system prompt + serialized profile +
- * recent turns), calls the model with the chapter's tools, and returns the same
- * ScriptedTurn shape the route already executes. On any model error it degrades
- * to a safe clarify turn so the route never crashes.
+ * DeepSeek-backed brain, split into two single-job calls:
+ *   1) EXTRACTION — emit tool calls for what was stated (reliable capture).
+ *   2) REPLY — warm prose that truthfully acknowledges what call 1 captured.
+ * Returns the same ScriptedTurn shape the route already executes (the route
+ * runs the tool calls via validateAndApply). Degrades to a safe turn on error.
  */
 export function makeDeepSeekBrain(chapterId: ChapterId): ChapterBrain {
-  return async (state, userText) => {
+  return async (state, userText, ctx) => {
+    const inputMethod = ctx?.inputMethod ?? "text";
+    const model = getAgentModel();
     try {
-      const result = await generateText({
-        model: getAgentModel(),
-        system: buildSystemPrompt(chapterId, state),
+      // 1) Extraction — tools only, no prose.
+      const extraction = await generateText({
+        model,
+        system: buildExtractionSystem(chapterId, state),
         messages: buildMessages(state, userText),
         tools: realEstateTools(),
         toolChoice: "auto",
       });
-
-      const toolCalls = result.toolCalls.map((tc) => ({
+      const toolCalls = extraction.toolCalls.map((tc) => ({
         name: tc.toolName,
         args: (tc.input ?? {}) as Record<string, unknown>,
       }));
+      console.log(
+        "[deepseek] extracted tools:",
+        toolCalls.length ? toolCalls.map((t) => t.name).join(", ") : "(none)",
+      );
 
+      // 2) Reply — prose only, knows what was just captured (truthful ack).
+      const reply = await generateText({
+        model,
+        system: buildReplySystem(state, toolCalls, inputMethod),
+        messages: buildMessages(state, userText),
+      });
       const text =
-        result.text?.trim() ||
-        (toolCalls.length ? "Got it. I've noted that on your record." : FALLBACK.text);
+        reply.text?.trim() ||
+        (toolCalls.length
+          ? "Got it. You'll see it on the right."
+          : FALLBACK.text);
 
       return { text, toolCalls, bucket: "answer" };
     } catch (err) {
