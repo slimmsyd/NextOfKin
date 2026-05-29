@@ -6,6 +6,7 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 
 import { type AutoSaveStatus } from "@/components/forms";
 import { applyToolCall } from "@/app/your-life/actions";
+import { updateProfileAction, type ProfileEdit } from "@/lib/setup/about-you";
 import { ChatPane, type ChatPaneMessage } from "./ChatPane";
 import { ProfilePane } from "./ProfilePane";
 import { YourLifeSidebar } from "./YourLifeSidebar";
@@ -83,13 +84,15 @@ function recordToAssetView(rec: AssetRecord): AssetView | null {
 }
 
 export function ChapterShell({
-  identity,
-  family,
+  identity: initialIdentity,
+  family: initialFamily,
   sections,
   initialAssets,
   initialTurns,
   chapter,
 }: ChapterShellProps) {
+  const [identity, setIdentity] = useState<IdentityView>(initialIdentity);
+  const [family, setFamily] = useState<FamilyView>(initialFamily);
   const [assets, setAssets] = useState<AssetView[]>(initialAssets);
   const [lastAddedId, setLastAddedId] = useState<string | null>(null);
   const [editSaveStatus, setEditSaveStatus] = useState<AutoSaveStatus>("idle");
@@ -193,6 +196,61 @@ export function ChapterShell({
     }
   };
 
+  const onProfileSave = async (patch: ProfileEdit) => {
+    setEditSaveStatus("saving");
+    // Optimistically reflect the edit in the live pane.
+    setIdentity((prev) =>
+      prev
+        ? {
+            ...prev,
+            ...(patch.legalName !== undefined
+              ? { legalName: patch.legalName }
+              : {}),
+            ...(patch.dob !== undefined ? { dob: patch.dob } : {}),
+            ...(patch.state !== undefined ? { stateCode: patch.state } : {}),
+            ...(patch.maritalStatus !== undefined
+              ? { maritalStatus: patch.maritalStatus }
+              : {}),
+          }
+        : prev,
+    );
+    if (
+      patch.spouseName !== undefined ||
+      patch.dependentNames !== undefined ||
+      patch.household !== undefined
+    ) {
+      setFamily((prev) => {
+        const base = prev ?? {
+          spouseName: null,
+          dependentNames: [],
+          household: null,
+        };
+        return {
+          spouseName:
+            patch.spouseName !== undefined
+              ? patch.spouseName?.trim() || null
+              : base.spouseName,
+          dependentNames:
+            patch.dependentNames !== undefined
+              ? patch.dependentNames.map((n) => n.trim()).filter(Boolean)
+              : base.dependentNames,
+          household:
+            patch.household !== undefined
+              ? patch.household || null
+              : base.household,
+        };
+      });
+    }
+    const result = await updateProfileAction(patch);
+    if (result.ok) {
+      setEditSaveStatus("saved");
+      if (editTimer.current) clearTimeout(editTimer.current);
+      editTimer.current = setTimeout(() => setEditSaveStatus("idle"), 1800);
+    } else {
+      setEditSaveStatus("error");
+    }
+  };
+
   const chatMessages = messages.map(uiMessageToChatPane);
   const isStreaming = status === "submitted" || status === "streaming";
 
@@ -220,6 +278,7 @@ export function ChapterShell({
             assets={assets}
             lastAddedId={lastAddedId}
             onFieldChange={onFieldChange}
+            onProfileSave={onProfileSave}
           />
         </div>
       </div>
