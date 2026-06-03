@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { VoiceNarrator } from "@/components/voice";
 import { AutoSaveBadge, type AutoSaveStatus } from "@/components/forms";
 import { AGENT_NAME } from "@/lib/voice/agent";
+import type { Suggestion } from "@/lib/yourLife/interviewFlow";
 import { AgentMessage } from "./AgentMessage";
 import { ChatInput } from "./ChatInput";
 import { TypingIndicator } from "./TypingIndicator";
@@ -23,6 +24,7 @@ type ChatPaneProps = {
   disabled: boolean;
   onSubmit: (text: string, inputMethod: "voice" | "text") => void;
   saveStatus?: AutoSaveStatus;
+  suggestions?: Suggestion[];
 };
 
 function AgentAvatar({
@@ -59,6 +61,7 @@ export function ChatPane({
   disabled,
   onSubmit,
   saveStatus,
+  suggestions,
 }: ChatPaneProps) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
@@ -97,7 +100,7 @@ export function ChatPane({
         ) : null}
       </div>
 
-      <ChatInput disabled={disabled} onSubmit={onSubmit} />
+      <ChatInput disabled={disabled} onSubmit={onSubmit} suggestions={suggestions} />
     </section>
   );
 }

@@ -7,6 +7,7 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import { type AutoSaveStatus } from "@/components/forms";
 import { applyToolCall } from "@/app/your-life/actions";
 import { updateProfileAction, type ProfileEdit } from "@/lib/setup/about-you";
+import type { Suggestion } from "@/lib/yourLife/interviewFlow";
 import { ChatPane, type ChatPaneMessage } from "./ChatPane";
 import { ProfilePane } from "./ProfilePane";
 import { YourLifeSidebar } from "./YourLifeSidebar";
@@ -24,6 +25,7 @@ type ChapterShellProps = {
   sections: SidebarSection[];
   initialAssets: AssetView[];
   initialTurns: ChatTurnView[];
+  initialSuggestions: Suggestion[];
   chapter: string;
 };
 
@@ -89,11 +91,14 @@ export function ChapterShell({
   sections,
   initialAssets,
   initialTurns,
+  initialSuggestions,
   chapter,
 }: ChapterShellProps) {
   const [identity, setIdentity] = useState<IdentityView>(initialIdentity);
   const [family, setFamily] = useState<FamilyView>(initialFamily);
   const [assets, setAssets] = useState<AssetView[]>(initialAssets);
+  const [suggestions, setSuggestions] =
+    useState<Suggestion[]>(initialSuggestions);
   const [lastAddedId, setLastAddedId] = useState<string | null>(null);
   const [editSaveStatus, setEditSaveStatus] = useState<AutoSaveStatus>("idle");
   const lastAddedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -115,6 +120,11 @@ export function ChapterShell({
   // flag_heirs_property_risk, update_asset_field, and any future asset tool.
   // Non-asset outputs (confirm/defer chapter) have no id and are ignored.
   const onData = (data: { type: string } & Record<string, unknown>) => {
+    // Recommended next questions arrive as a transient data part each turn.
+    if (data.type === "data-suggestions") {
+      setSuggestions((data.data as Suggestion[]) ?? []);
+      return;
+    }
     if (data.type !== "tool-output-available") return;
     const output = data.output as AssetRecord | undefined;
     if (!output) return;
@@ -149,6 +159,8 @@ export function ChapterShell({
     editSaveStatus !== "idle" ? editSaveStatus : chatDerivedStatus;
 
   const onSubmit = (text: string, inputMethod: "voice" | "text") => {
+    // Clear the current chips immediately; the fresh set streams back with the reply.
+    setSuggestions([]);
     sendMessage({ text }, { body: { inputMethod } });
   };
 
@@ -251,6 +263,7 @@ export function ChapterShell({
             disabled={isStreaming}
             onSubmit={onSubmit}
             saveStatus={saveStatus}
+            suggestions={suggestions}
           />
         </div>
         <div className="md:col-span-5 overflow-hidden">

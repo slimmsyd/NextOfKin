@@ -3,6 +3,7 @@ import "server-only";
 import type { ModelMessage } from "ai";
 import type { ChapterState } from "@/lib/yourLife/loadChapterState";
 import type { ChapterId } from "@/lib/yourLife/chapters";
+import type { Probe } from "@/lib/yourLife/interviewFlow";
 
 // The agent's contract. The turn is SPLIT into two single-job model calls:
 //   1) EXTRACTION — emit tool calls for what was stated (no prose).
@@ -150,9 +151,16 @@ export function buildReplySystem(
   state: ChapterState,
   toolCalls: ToolCall[],
   inputMethod: InputMethod,
+  probe?: Probe,
 ): string {
   const { captured, readback } = summarizeCaptured(toolCalls, inputMethod);
-  return `${REPLY_RULES}${readback}\n\nWhat was captured this turn: ${captured}\n\n--- CURRENT RECORD ---\n${serializeProfile(state)}`;
+  // Soft steer: ask about the same thing the chips will surface, so Ava's
+  // question and the recommended questions stay aligned. Advisory only.
+  const nextStep =
+    probe && probe.ask
+      ? `\n\nThe most useful next thing to learn is ${probe.ask}. Make this the main question of your reply, phrased warmly and in your own words, UNLESS the person is clearly steering somewhere else. Never ask about something already on the record.`
+      : "";
+  return `${REPLY_RULES}${readback}\n\nWhat was captured this turn: ${captured}${nextStep}\n\n--- CURRENT RECORD ---\n${serializeProfile(state)}`;
 }
 
 /** Recent turns as model messages + the current user message appended. */

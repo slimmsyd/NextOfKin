@@ -4,6 +4,7 @@ import { ChapterShell } from "@/components/yourLife/ChapterShell";
 import { loadChapterState } from "@/lib/yourLife/loadChapterState";
 import { prisma } from "@/lib/prisma";
 import { CHAPTERS, getChapterBySlug } from "@/lib/yourLife/chapters";
+import { chipsForProbe, nextProbe } from "@/lib/yourLife/interviewFlow";
 import type {
   AssetView,
   ChatTurnView,
@@ -71,6 +72,13 @@ export default async function ChapterPage({
     select: { chapter: true, status: true },
   });
 
+  // Opening chips for first paint, resume-aware: the gentle probe over the
+  // current record (no capture yet). Refreshes each turn from the route.
+  const initialSuggestions = chipsForProbe(
+    nextProbe({ chapter: def.id, state: result.state, capturedThisTurn: [] }),
+    def.id,
+  );
+
   return (
     <ChapterShell
       identity={toIdentity(user)}
@@ -78,6 +86,7 @@ export default async function ChapterPage({
       sections={computeSections(progress)}
       initialAssets={assets.map(toAssetView)}
       initialTurns={turnViews}
+      initialSuggestions={initialSuggestions}
       chapter={def.id}
     />
   );

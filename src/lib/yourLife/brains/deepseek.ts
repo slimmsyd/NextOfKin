@@ -8,6 +8,7 @@ import {
   buildReplySystem,
 } from "@/lib/yourLife/agentContract";
 import type { ChapterId } from "@/lib/yourLife/chapters";
+import { nextProbe } from "@/lib/yourLife/interviewFlow";
 import { UpsertAssetSchema } from "@/lib/yourLife/tools/upsertAsset";
 import { FlagHeirsPropertyRiskSchema } from "@/lib/yourLife/tools/flagHeirsPropertyRisk";
 import { ConfirmChapterCompleteSchema } from "@/lib/yourLife/tools/confirmChapterComplete";
@@ -77,10 +78,16 @@ export function makeDeepSeekBrain(chapterId: ChapterId): ChapterBrain {
         toolCalls.length ? toolCalls.map((t) => t.name).join(", ") : "(none)",
       );
 
-      // 2) Reply — prose only, knows what was just captured (truthful ack).
+      // Shared primitive: the most useful next topic, computed from the record
+      // + what was just captured. Steers Ava AND seeds the chips (one source of
+      // truth, so they stay aligned).
+      const probe = nextProbe({ chapter: chapterId, state, capturedThisTurn: toolCalls });
+
+      // 2) Reply — prose only, knows what was just captured (truthful ack) and
+      //    which topic to gently move toward.
       const reply = await generateText({
         model,
-        system: buildReplySystem(state, toolCalls, inputMethod),
+        system: buildReplySystem(state, toolCalls, inputMethod, probe),
         messages: buildMessages(state, userText),
       });
       const text =
@@ -89,7 +96,7 @@ export function makeDeepSeekBrain(chapterId: ChapterId): ChapterBrain {
           ? "Got it. You'll see it on the right."
           : FALLBACK.text);
 
-      return { text, toolCalls, bucket: "answer" };
+      return { text, toolCalls, bucket: "answer", nextProbe: probe };
     } catch (err) {
       console.error("[deepseek] turn failed:", err);
       return FALLBACK;

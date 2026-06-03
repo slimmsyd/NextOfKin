@@ -2,6 +2,14 @@ import "server-only";
 
 import type { ChapterState } from "@/lib/yourLife/loadChapterState";
 import type { ScriptedTurn } from "@/lib/yourLife/brains/types";
+import type { Probe, ProbeKind } from "@/lib/yourLife/interviewFlow";
+
+// The script knows exactly what it just asked, so it declares its own probe
+// directly (no inference). `ask` is unused here (no model reply prompt); the
+// topic seeds the chips. Keeps financial chips aligned for free.
+function fp(kind: ProbeKind, topic: string): Probe {
+  return { kind, topic, ask: "" };
+}
 
 // Deterministic scripted brain for the financial-accounts chapter. Same
 // input/output contract as the real-estate brain (ChapterBrain), so a real
@@ -114,10 +122,20 @@ export function financialAccountsBrain(
   lastUserMessage: string,
 ): ScriptedTurn {
   if (matchesAny(lastUserMessage, LEGAL_KEYWORDS)) {
-    return { text: LEGAL_REFUSAL, toolCalls: [], bucket: "legal_advice" };
+    return {
+      text: LEGAL_REFUSAL,
+      toolCalls: [],
+      bucket: "legal_advice",
+      nextProbe: fp("another_asset", "another_account"),
+    };
   }
   if (matchesAny(lastUserMessage, ADVICE_KEYWORDS)) {
-    return { text: ADVICE_REFUSAL, toolCalls: [], bucket: "financial_advice" };
+    return {
+      text: ADVICE_REFUSAL,
+      toolCalls: [],
+      bucket: "financial_advice",
+      nextProbe: fp("another_asset", "another_account"),
+    };
   }
 
   const userMessageCount = state.turns.filter((t) => t.role === "user").length;
@@ -126,8 +144,9 @@ export function financialAccountsBrain(
   // Turns 1-2: capture an account if we can recognize one, then ask for more.
   if (userMessageCount <= 2) {
     if (detected) {
+      const askingForMore = userMessageCount === 1;
       return {
-        text: userMessageCount === 1 ? ASK_MORE : ASK_BENEFICIARY,
+        text: askingForMore ? ASK_MORE : ASK_BENEFICIARY,
         toolCalls: [
           {
             name: "add_financial_account",
@@ -138,6 +157,9 @@ export function financialAccountsBrain(
           },
         ],
         bucket: "answer",
+        nextProbe: askingForMore
+          ? fp("another_asset", "another_account")
+          : fp("field", "beneficiary_named"),
       };
     }
     // Couldn't recognize an account type — gently clarify.
@@ -145,6 +167,7 @@ export function financialAccountsBrain(
       text: "No problem. What kind of account is it, checking, savings, a 401(k), an IRA, or a brokerage?",
       toolCalls: [],
       bucket: "clarify",
+      nextProbe: fp("field", "account_type"),
     };
   }
 
@@ -162,6 +185,7 @@ export function financialAccountsBrain(
         },
       ],
       bucket: "answer",
+      nextProbe: fp("field", "beneficiary_named"),
     };
   }
 
@@ -171,6 +195,7 @@ export function financialAccountsBrain(
       { name: "confirm_chapter_complete", args: { chapter: "financial_accounts" } },
     ],
     bucket: "answer",
+    nextProbe: fp("done_check", "done_check"),
   };
 }
 

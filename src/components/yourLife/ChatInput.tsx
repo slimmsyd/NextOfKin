@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useSpeechRecognition } from "@/lib/yourLife/useSpeechRecognition";
+import type { Suggestion } from "@/lib/yourLife/interviewFlow";
+import { RecommendedQuestions } from "./RecommendedQuestions";
 
 type ChatInputProps = {
   disabled: boolean;
   onSubmit: (text: string, inputMethod: "voice" | "text") => void;
+  suggestions?: Suggestion[];
 };
 
 function MicIcon({ listening }: { listening: boolean }) {
@@ -46,7 +49,7 @@ function SendIcon() {
   );
 }
 
-export function ChatInput({ disabled, onSubmit }: ChatInputProps) {
+export function ChatInput({ disabled, onSubmit, suggestions }: ChatInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   // Tracks whether the pending text came from the mic (drives voice read-back of
@@ -85,6 +88,20 @@ export function ChatInput({ disabled, onSubmit }: ChatInputProps) {
     }
   };
 
+  // Prefill (never auto-send): drop the question into the composer so the user
+  // can edit it, then send. A picked question is typed, not voice.
+  const pick = (text: string) => {
+    voiceUsedRef.current = false;
+    setValue(text);
+    const el = textareaRef.current;
+    if (el) {
+      el.focus();
+      requestAnimationFrame(() => {
+        el.selectionStart = el.selectionEnd = el.value.length;
+      });
+    }
+  };
+
   const canSend = value.trim().length > 0 && !disabled;
   const displayValue = listening && interim ? `${value} ${interim}`.trim() : value;
 
@@ -96,6 +113,9 @@ export function ChatInput({ disabled, onSubmit }: ChatInputProps) {
       }}
       className="border-t border-surface-lavender-300 bg-surface-lavender-100 px-4 py-3"
     >
+      {suggestions && suggestions.length > 0 && !disabled ? (
+        <RecommendedQuestions suggestions={suggestions} onPick={pick} />
+      ) : null}
       <div className="flex items-end gap-2 rounded-2xl bg-white border border-surface-lavender-300 focus-within:border-brand-indigo/40 px-3 py-2 transition-colors">
         <textarea
           ref={textareaRef}
@@ -151,6 +171,10 @@ export function ChatInput({ disabled, onSubmit }: ChatInputProps) {
       {listening ? (
         <p className="mt-1.5 px-1 text-[11px] text-foreground/55">
           Listening… <span className="text-foreground/40">say what&rsquo;s true</span>
+        </p>
+      ) : suggestions && suggestions.length > 0 && !disabled ? (
+        <p className="mt-2 px-1 text-center text-[11px] text-foreground/45">
+          Tap a recommended question to drop it in, edit it, then send.
         </p>
       ) : null}
     </form>

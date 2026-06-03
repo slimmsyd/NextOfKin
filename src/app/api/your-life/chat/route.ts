@@ -12,6 +12,7 @@ import { validateAndApply } from "@/lib/yourLife/tools";
 import { loadChapterState } from "@/lib/yourLife/loadChapterState";
 import { getChapter } from "@/lib/yourLife/chapters";
 import { getBrain } from "@/lib/yourLife/brains";
+import { chipsForProbe, openingProbe } from "@/lib/yourLife/interviewFlow";
 
 export const runtime = "nodejs";
 
@@ -164,6 +165,15 @@ export async function POST(req: Request) {
 
       // Then stream the agent reply text.
       await streamReplyText(writer, replyText);
+
+      // Recommended next questions: deterministic chips for the same topic Ava
+      // was just steered toward (so they match her question). Transient — they
+      // drive UI state, not message history.
+      const chips = chipsForProbe(
+        turn.nextProbe ?? openingProbe(chapterDef.id),
+        chapterDef.id,
+      );
+      writer.write({ type: "data-suggestions", data: chips, transient: true });
 
       writer.write({ type: "finish" });
 
