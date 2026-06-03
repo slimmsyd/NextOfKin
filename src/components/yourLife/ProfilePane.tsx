@@ -15,14 +15,16 @@ import {
 import type { ProfileEdit } from "@/lib/setup/about-you";
 import { AssetCard } from "./AssetCard";
 import { IdentityCard } from "./IdentityCard";
+import { PersonCard } from "./PersonCard";
 import { SectionLabel } from "./SectionLabel";
 import { SectionPlaceholder } from "./SectionPlaceholder";
-import type { AssetView, FamilyView, IdentityView } from "./types";
+import type { AssetView, FamilyView, IdentityView, PersonView } from "./types";
 
 type ProfilePaneProps = {
   identity: IdentityView;
   family: FamilyView;
   assets: AssetView[];
+  people: PersonView[];
   lastAddedId: string | null;
   onFieldChange: (
     assetId: string,
@@ -201,6 +203,7 @@ export function ProfilePane({
   identity,
   family,
   assets,
+  people,
   lastAddedId,
   onFieldChange,
   onProfileSave,
@@ -257,9 +260,24 @@ export function ProfilePane({
       )}
 
       <SectionLabel>Who You Protect</SectionLabel>
-      <SectionPlaceholder>
-        We&rsquo;ll get here after we cover what you have.
-      </SectionPlaceholder>
+      {people.length > 0 ? (
+        <div className="space-y-3">
+          {people.map((p) => {
+            const receivesLabel =
+              (p.receivesAssetId &&
+                assets.find((a) => a.id === p.receivesAssetId)?.label) ||
+              p.receivesAssetLabel ||
+              null;
+            return (
+              <PersonCard key={p.id} person={p} receivesLabel={receivesLabel} />
+            );
+          })}
+        </div>
+      ) : (
+        <SectionPlaceholder>
+          We&rsquo;ll get here after we cover what you have.
+        </SectionPlaceholder>
+      )}
 
       <SectionLabel>Wishes &amp; Stories</SectionLabel>
       <SectionPlaceholder>

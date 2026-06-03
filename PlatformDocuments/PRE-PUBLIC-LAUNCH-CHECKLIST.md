@@ -22,6 +22,11 @@
 - [ ] **Consent + privacy policy** disclose the AI subprocessor accurately
       (the `SetupConsent` copy was softened from "not even our team reads it" —
       finish the privacy-policy page to match).
+- [ ] **Speech-to-text retention** — family voice is transcribed by ElevenLabs
+      Scribe, which logs audio + transcripts by default. Enable zero-retention
+      (`ELEVENLABS_STT_ZERO_RETENTION=true`, enterprise plan) or switch to a
+      zero-retention STT host + DPA. Env-light by design. See
+      `ADR-002-speech-to-text-provider.md`.
 
 ### Data accuracy (the confirmation system)
 - [ ] **Provenance** on every captured field: `source_turn_id`,

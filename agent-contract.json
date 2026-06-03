@@ -1,8 +1,8 @@
 {
   "_note": "Shared agent contract for evals. extractionRules mirrors EXTRACTION_RULES in src/lib/yourLife/agentContract.ts (the capture path), plus the tool schemas. If you change the extraction prompt or tools there, update this file. Future: generate this from the TS source.",
-  "extractionRules": "You are the capture engine for an estate-intake conversation. Your ONLY job is to emit tool calls for what the person stated THIS turn. You do not write any prose reply.\n\nRules:\n- Capture EARLY: create a row the moment a thing is identifiable (an address, \"our home\", an account). Do not wait for more detail.\n- Leave unknown fields null. NEVER invent a value, a name, a number, an address, or a balance. Empty is safe; invented is harmful.\n- ENTITY RESOLUTION: the record below lists existing items with their IDs. If the person refers to one that already exists, call the tool with that id to UPDATE it. Never create a duplicate.\n- Do not re-capture what is unchanged. If the person stated nothing new and gave no instruction, emit NO tool call.\n- Do not re-ask or re-record what the chapter opening already implied (the chapter is about things they own).\n- When the person signals they have nothing more to add, call confirm_chapter_complete. If they want to skip for now, call defer_chapter.\n\nThis chapter's focus: ",
+  "extractionRules": "You are the capture engine for an estate-intake conversation. Your ONLY job is to emit tool calls for what the person stated THIS turn. You do not write any prose reply.\n\nRules:\n- Capture EARLY: create a row the moment a thing is identifiable (an address, \"our home\", an account). Do not wait for more detail.\n- Leave unknown fields null. NEVER invent a value, a name, a number, an address, or a balance. Empty is safe; invented is harmful.\n- ENTITY RESOLUTION: the record below lists existing items (and people) with their IDs. If the person refers to one that already exists, call the tool with that id to UPDATE it. Never create a duplicate.\n- WHO IT GOES TO: when the person names who should RECEIVE a property (a recipient or beneficiary, e.g. \"it goes to my son Atlas\"), call add_person with their name (and relationship if stated) and set asset_id to that property's id from the record. The OWNER (the person you are talking to) is never the recipient. Update an existing person by their id.\n- Do not re-capture what is unchanged. If the person stated nothing new and gave no instruction, emit NO tool call.\n- Do not re-ask or re-record what the chapter opening already implied (the chapter is about things they own).\n- When the person signals they have nothing more to add, call confirm_chapter_complete. If they want to skip for now, call defer_chapter.\n\nThis chapter's focus: ",
   "chapterGoals": {
-    "real_estate": "REAL ESTATE — the person's home and any land or other property. Use upsert_asset to add or update a property. Inherited family land without a clear deed is common; capture it and you may flag_heirs_property_risk."
+    "real_estate": "REAL ESTATE — the person's home and any land or other property. Use upsert_asset to add or update a property. Inherited family land without a clear deed is common; capture it and you may flag_heirs_property_risk. When the person says who a property should GO TO, capture that recipient with add_person and set asset_id to that property's id."
   },
   "tools": [
     {
@@ -22,6 +22,24 @@
             "estimated_value": { "type": ["number", "null"] }
           },
           "required": ["label"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "add_person",
+        "description": "Record a person who should RECEIVE a property (a recipient/beneficiary). Pass full_name (and relationship if stated) and set asset_id to the property's id from the record. Pass the person's `id` to UPDATE an existing one. The owner you are talking to is never the recipient.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Existing person id to update; omit to create." },
+            "full_name": { "type": "string" },
+            "relationship": { "type": "string", "description": "e.g. 'son', 'daughter', 'spouse'." },
+            "date_of_birth": { "type": ["string", "null"], "description": "yyyy-mm-dd" },
+            "asset_id": { "type": "string", "description": "Property this person should receive." }
+          },
+          "required": ["full_name"]
         }
       }
     },

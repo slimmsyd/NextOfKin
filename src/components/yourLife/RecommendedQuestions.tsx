@@ -51,7 +51,7 @@ export function RecommendedQuestions({
                 ? { duration: 0 }
                 : { duration: 0.36, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }
             }
-            className="group flex items-start gap-2.5 rounded-[14px] border border-brand-violet/20 bg-white px-3.5 py-3 text-left text-[13.5px] leading-snug text-foreground shadow-[0_1px_2px_rgba(34,30,68,0.04)] transition-colors hover:border-brand-violet hover:bg-surface-lavender-300"
+            className="group flex items-start gap-2.5 rounded-[14px] border border-brand-violet/20 bg-white px-3.5 py-3 text-left text-[13.5px] leading-snug text-foreground shadow-[0_1px_2px_rgba(34,30,68,0.04)] transition-colors cursor-pointer hover:border-brand-violet hover:bg-surface-lavender-300"
           >
             <span className="mt-px flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] bg-brand-violet/10">
               <SparkIcon className="w-3 h-3 text-brand-violet" />

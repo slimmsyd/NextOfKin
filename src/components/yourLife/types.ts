@@ -38,3 +38,12 @@ export type ChatTurnView = {
   text: string;
   bucket: string | null;
 };
+
+export type PersonView = {
+  id: string;
+  fullName: string;
+  relationship: string | null;
+  /** The asset this person is designated to receive, if linked. */
+  receivesAssetId: string | null;
+  receivesAssetLabel: string | null;
+};

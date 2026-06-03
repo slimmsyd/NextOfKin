@@ -25,7 +25,7 @@ const BINDING_ARGS: Record<string, string[]> = {
 };
 
 const CHAPTER_GOALS: Record<ChapterId, string> = {
-  real_estate: `REAL ESTATE — the person's home and any land or other property. Use upsert_asset to add or update a property. Inherited family land without a clear deed is common; capture it and you may flag_heirs_property_risk.`,
+  real_estate: `REAL ESTATE — the person's home and any land or other property. Use upsert_asset to add or update a property. Inherited family land without a clear deed is common; capture it and you may flag_heirs_property_risk. When the person says who a property should GO TO, capture that recipient with add_person and set asset_id to that property's id.`,
   financial_accounts: `FINANCIAL ACCOUNTS — checking, savings, retirement (401k, IRA), brokerage. Use upsert_asset (or add_financial_account) to add or update each account.`,
 };
 
@@ -49,7 +49,21 @@ export function serializeProfile(state: ChapterState): string {
     items = `Items already on record (reference these IDs to UPDATE, do not duplicate):\n${lines.join("\n")}`;
   }
 
-  return `${who}\n${items}`;
+  let people = "";
+  if (state.beneficiaries.length > 0) {
+    const plines = state.beneficiaries.map((b) => {
+      const rel = b.relationship ? `, ${b.relationship}` : "";
+      const recv = b.receivesAssetLabel
+        ? `; receives ${b.receivesAssetLabel}`
+        : b.receivesAssetId
+          ? "; receives a property on record"
+          : "";
+      return `- [id=${b.id}] ${fmt(b.fullName, "(unnamed)")}${rel}${recv}`;
+    });
+    people = `\nPeople already on record (reference these IDs to UPDATE, do not duplicate):\n${plines.join("\n")}`;
+  }
+
+  return `${who}\n${items}${people}`;
 }
 
 // ---------- Extraction call (single job: emit tool calls) ----------
@@ -59,7 +73,8 @@ const EXTRACTION_RULES = `You are the capture engine for an estate-intake conver
 Rules:
 - Capture EARLY: create a row the moment a thing is identifiable (an address, "our home", an account). Do not wait for more detail.
 - Leave unknown fields null. NEVER invent a value, a name, a number, an address, or a balance. Empty is safe; invented is harmful.
-- ENTITY RESOLUTION: the record below lists existing items with their IDs. If the person refers to one that already exists, call the tool with that id to UPDATE it. Never create a duplicate.
+- ENTITY RESOLUTION: the record below lists existing items (and people) with their IDs. If the person refers to one that already exists, call the tool with that id to UPDATE it. Never create a duplicate.
+- WHO IT GOES TO: when the person names who should RECEIVE a property (a recipient or beneficiary, e.g. "it goes to my son Atlas"), call add_person with their name (and relationship if stated) and set asset_id to that property's id from the record. The OWNER (the person you are talking to) is never the recipient. Update an existing person by their id.
 - Do not re-capture what is unchanged. If the person stated nothing new and gave no instruction, emit NO tool call.
 - Do not re-ask or re-record what the chapter opening already implied (the chapter is about things they own).
 - When the person signals they have nothing more to add, call confirm_chapter_complete. If they want to skip for now, call defer_chapter.

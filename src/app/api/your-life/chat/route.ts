@@ -16,6 +16,16 @@ import { chipsForProbe, openingProbe } from "@/lib/yourLife/interviewFlow";
 
 export const runtime = "nodejs";
 
+// Tools whose result is an asset row (drives the "What you have" pane). Used to
+// route applied results onto the right transient data-* channel.
+const ASSET_TOOLS = new Set([
+  "upsert_asset",
+  "add_real_estate",
+  "add_financial_account",
+  "flag_heirs_property_risk",
+  "update_asset_field",
+]);
+
 type IncomingMessage = {
   role: "user" | "assistant";
   parts?: Array<{ type: string; text?: string }>;
@@ -147,6 +157,18 @@ export async function POST(req: Request) {
             toolCallId,
             output: result.data,
           });
+          // Live pane updates ride TRANSIENT data-* parts, the only channel
+          // useChat delivers to onData (tool-output-available does NOT reach it).
+          if (ASSET_TOOLS.has(result.name)) {
+            writer.write({ type: "data-asset", data: result.data, transient: true });
+          } else if (result.name === "add_person") {
+            writer.write({ type: "data-person", data: result.data, transient: true });
+          } else if (
+            result.name === "confirm_chapter_complete" ||
+            result.name === "defer_chapter"
+          ) {
+            writer.write({ type: "data-progress", data: result.data, transient: true });
+          }
         } else {
           writer.write({
             type: "tool-output-error",

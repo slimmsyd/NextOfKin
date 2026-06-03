@@ -35,6 +35,16 @@ export type ChapterState = {
     bucket: string | null;
     createdAt: Date;
   }>;
+  beneficiaries: Array<{
+    id: string;
+    fullName: string | null;
+    relationship: string | null;
+    type: string;
+    /** Asset this person is designated to receive (first designation), if any. */
+    receivesAssetId: string | null;
+    receivesAssetLabel: string | null;
+    createdAt: Date;
+  }>;
 };
 
 const TURNS_LIMIT = 40;
@@ -64,7 +74,13 @@ export async function loadChapterState(chapter: string): Promise<
   if (!user) {
     return {
       ok: true,
-      state: { authUserId: data.user.id, user: null, assets: [], turns: [] },
+      state: {
+        authUserId: data.user.id,
+        user: null,
+        assets: [],
+        turns: [],
+        beneficiaries: [],
+      },
     };
   }
 
@@ -80,6 +96,14 @@ export async function loadChapterState(chapter: string): Promise<
     where: { userId: user.id, chapter },
     orderBy: { createdAt: "asc" },
     take: TURNS_LIMIT,
+  });
+
+  // Beneficiaries are user-level (not chapter-scoped); "Who you protect" spans
+  // the whole profile. Include the asset each is designated to receive.
+  const beneficiaryRows = await prisma.beneficiary.findMany({
+    where: { userId: user.id, deletedAt: null },
+    include: { assetDesignations: { include: { asset: true } } },
+    orderBy: { createdAt: "asc" },
   });
 
   return {
@@ -106,6 +130,18 @@ export async function loadChapterState(chapter: string): Promise<
         bucket: t.bucket,
         createdAt: t.createdAt,
       })),
+      beneficiaries: beneficiaryRows.map((b) => {
+        const link = b.assetDesignations[0];
+        return {
+          id: b.id,
+          fullName: b.fullName,
+          relationship: b.relationship,
+          type: b.type,
+          receivesAssetId: link?.assetId ?? null,
+          receivesAssetLabel: link?.asset?.institution ?? null,
+          createdAt: b.createdAt,
+        };
+      }),
     },
   };
 }

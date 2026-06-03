@@ -10,6 +10,7 @@ import {
 import type { ChapterId } from "@/lib/yourLife/chapters";
 import { nextProbe } from "@/lib/yourLife/interviewFlow";
 import { UpsertAssetSchema } from "@/lib/yourLife/tools/upsertAsset";
+import { AddPersonSchema } from "@/lib/yourLife/tools/addPerson";
 import { FlagHeirsPropertyRiskSchema } from "@/lib/yourLife/tools/flagHeirsPropertyRisk";
 import { ConfirmChapterCompleteSchema } from "@/lib/yourLife/tools/confirmChapterComplete";
 import { DeferChapterSchema } from "@/lib/yourLife/tools/deferChapter";
@@ -31,6 +32,11 @@ function realEstateTools() {
       description:
         "Add or update a real-estate property. Pass `id` (from the record) to UPDATE an existing one; omit `id` to add a new one. Only include fields the person actually stated.",
       inputSchema: UpsertAssetSchema,
+    }),
+    add_person: tool({
+      description:
+        "Record a person who should RECEIVE a property (a recipient/beneficiary). Pass full_name (and relationship if stated) and set asset_id to the property's id from the record. Pass the person's `id` to UPDATE an existing one. The owner you are talking to is never the recipient.",
+      inputSchema: AddPersonSchema,
     }),
     flag_heirs_property_risk: tool({
       description:

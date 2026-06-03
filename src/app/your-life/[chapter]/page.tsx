@@ -3,14 +3,14 @@ import { notFound, redirect } from "next/navigation";
 import { ChapterShell } from "@/components/yourLife/ChapterShell";
 import { loadChapterState } from "@/lib/yourLife/loadChapterState";
 import { prisma } from "@/lib/prisma";
-import { CHAPTERS, getChapterBySlug } from "@/lib/yourLife/chapters";
+import { getChapterBySlug } from "@/lib/yourLife/chapters";
 import { chipsForProbe, nextProbe } from "@/lib/yourLife/interviewFlow";
 import type {
   AssetView,
   ChatTurnView,
   FamilyView,
   IdentityView,
-  SidebarSection,
+  PersonView,
 } from "@/components/yourLife/types";
 
 export default async function ChapterPage({
@@ -71,6 +71,20 @@ export default async function ChapterPage({
     where: { userId: user.id },
     select: { chapter: true, status: true },
   });
+  const initialProgress: Record<string, string> = Object.fromEntries(
+    progress.map((p) => [p.chapter, p.status]),
+  );
+
+  // People already on record drive "Who you protect" (live thereafter).
+  const initialPeople: PersonView[] = result.state.beneficiaries
+    .filter((b) => b.type === "person" && b.fullName)
+    .map((b) => ({
+      id: b.id,
+      fullName: b.fullName as string,
+      relationship: b.relationship,
+      receivesAssetId: b.receivesAssetId,
+      receivesAssetLabel: b.receivesAssetLabel,
+    }));
 
   // Opening chips for first paint, resume-aware: the gentle probe over the
   // current record (no capture yet). Refreshes each turn from the route.
@@ -83,29 +97,14 @@ export default async function ChapterPage({
     <ChapterShell
       identity={toIdentity(user)}
       family={toFamily(user.aboutYouDetails)}
-      sections={computeSections(progress)}
+      initialProgress={initialProgress}
       initialAssets={assets.map(toAssetView)}
       initialTurns={turnViews}
       initialSuggestions={initialSuggestions}
+      initialPeople={initialPeople}
       chapter={def.id}
     />
   );
-}
-
-function computeSections(
-  progress: Array<{ chapter: string; status: string }>,
-): SidebarSection[] {
-  const statusByChapter = new Map(progress.map((p) => [p.chapter, p.status]));
-  const allChaptersDone = CHAPTERS.every((c) => {
-    const s = statusByChapter.get(c.id);
-    return s === "complete" || s === "deferred";
-  });
-  return [
-    { label: "About you", state: "done" },
-    { label: "What you have", state: allChaptersDone ? "done" : "active" },
-    { label: "Who you protect", state: "locked" },
-    { label: "Wishes & stories", state: "locked" },
-  ];
 }
 
 type UserSummary = {

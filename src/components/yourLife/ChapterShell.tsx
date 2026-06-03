@@ -8,6 +8,7 @@ import { type AutoSaveStatus } from "@/components/forms";
 import { applyToolCall } from "@/app/your-life/actions";
 import { updateProfileAction, type ProfileEdit } from "@/lib/setup/about-you";
 import type { Suggestion } from "@/lib/yourLife/interviewFlow";
+import { deriveSections } from "@/lib/yourLife/sections";
 import { ChatPane, type ChatPaneMessage } from "./ChatPane";
 import { ProfilePane } from "./ProfilePane";
 import { YourLifeSidebar } from "./YourLifeSidebar";
@@ -16,18 +17,30 @@ import type {
   ChatTurnView,
   FamilyView,
   IdentityView,
-  SidebarSection,
+  PersonView,
 } from "./types";
 
 type ChapterShellProps = {
   identity: IdentityView;
   family: FamilyView;
-  sections: SidebarSection[];
+  initialProgress: Record<string, string>;
   initialAssets: AssetView[];
   initialTurns: ChatTurnView[];
   initialSuggestions: Suggestion[];
+  initialPeople: PersonView[];
   chapter: string;
 };
+
+// Asset row types that belong in the "What you have" pane (guards against a
+// beneficiary row, which also has an id, being mistaken for an asset).
+const ASSET_TYPES = new Set([
+  "real_estate",
+  "account_401k",
+  "account_ira",
+  "account_brokerage",
+  "account_checking",
+  "account_savings",
+]);
 
 function turnsToUIMessages(turns: ChatTurnView[]): UIMessage[] {
   return turns.map((t) => ({
@@ -88,19 +101,30 @@ function recordToAssetView(rec: AssetRecord): AssetView | null {
 export function ChapterShell({
   identity: initialIdentity,
   family: initialFamily,
-  sections,
+  initialProgress,
   initialAssets,
   initialTurns,
   initialSuggestions,
+  initialPeople,
   chapter,
 }: ChapterShellProps) {
   const [identity, setIdentity] = useState<IdentityView>(initialIdentity);
   const [family, setFamily] = useState<FamilyView>(initialFamily);
   const [assets, setAssets] = useState<AssetView[]>(initialAssets);
+  const [people, setPeople] = useState<PersonView[]>(initialPeople);
+  const [progress, setProgress] =
+    useState<Record<string, string>>(initialProgress);
   const [suggestions, setSuggestions] =
     useState<Suggestion[]>(initialSuggestions);
   const [lastAddedId, setLastAddedId] = useState<string | null>(null);
   const [editSaveStatus, setEditSaveStatus] = useState<AutoSaveStatus>("idle");
+
+  // Sidebar/right-pane sections are DERIVED from live progress + people, so they
+  // stay in sync with the conversation without a reload.
+  const sections = useMemo(
+    () => deriveSections(progress, { hasPeople: people.length > 0 }),
+    [progress, people],
+  );
   const lastAddedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -113,21 +137,52 @@ export function ChapterShell({
     [chapter],
   );
 
-  // onData receives every raw stream chunk; tool outputs land here without
-  // forcing us to setState inside an effect that watches `messages`.
-  // Shape-driven (not tool-name-driven): any tool whose output is an asset row
-  // (has an id) upserts into the pane. Covers upsert_asset, add_*,
-  // flag_heirs_property_risk, update_asset_field, and any future asset tool.
-  // Non-asset outputs (confirm/defer chapter) have no id and are ignored.
+  // onData receives transient data-* parts (the ONLY stream channel useChat
+  // delivers to this callback; tool-output-available never reaches here). Every
+  // live pane/section update rides one of these parts.
   const onData = (data: { type: string } & Record<string, unknown>) => {
-    // Recommended next questions arrive as a transient data part each turn.
     if (data.type === "data-suggestions") {
       setSuggestions((data.data as Suggestion[]) ?? []);
       return;
     }
-    if (data.type !== "tool-output-available") return;
-    const output = data.output as AssetRecord | undefined;
+    if (data.type === "data-progress") {
+      const d = data.data as { chapter?: string; status?: string };
+      if (d?.chapter && d?.status) {
+        setProgress((prev) => ({ ...prev, [d.chapter as string]: d.status as string }));
+      }
+      return;
+    }
+    if (data.type === "data-person") {
+      const p = data.data as {
+        id?: string;
+        fullName?: string | null;
+        relationship?: string | null;
+        type?: string;
+        linkedAssetId?: string | null;
+      };
+      if (!p?.id || (p.type && p.type !== "person")) return;
+      // Label is resolved at render from live assets (avoids stale-closure on
+      // `assets`); store the id here.
+      const view: PersonView = {
+        id: p.id,
+        fullName: p.fullName ?? "",
+        relationship: p.relationship ?? null,
+        receivesAssetId: p.linkedAssetId ?? null,
+        receivesAssetLabel: null,
+      };
+      setPeople((prev) =>
+        prev.some((x) => x.id === view.id)
+          ? prev.map((x) => (x.id === view.id ? view : x))
+          : [...prev, view],
+      );
+      return;
+    }
+    if (data.type !== "data-asset") return;
+    const output = data.data as AssetRecord | undefined;
     if (!output) return;
+    // Defense in depth: only treat known asset rows as assets (a beneficiary row
+    // also carries an id and must never become a phantom asset card).
+    if (output.type && !ASSET_TYPES.has(output.type)) return;
     const view = recordToAssetView(output);
     if (!view) return;
     setAssets((prev) =>
@@ -271,6 +326,7 @@ export function ChapterShell({
             identity={identity}
             family={family}
             assets={assets}
+            people={people}
             lastAddedId={lastAddedId}
             onFieldChange={onFieldChange}
             onProfileSave={onProfileSave}

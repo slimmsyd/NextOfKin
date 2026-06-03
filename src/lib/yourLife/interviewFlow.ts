@@ -153,12 +153,15 @@ function realEstateProbe(
   }
 
   const upserts = capturedThisTurn.filter((c) => c.name === "upsert_asset");
+  // If a recipient was captured this turn, don't re-ask "who gets it" (the
+  // recipient probe only leads for a freshly named asset).
+  const personCaptured = capturedThisTurn.some((c) => c.name === "add_person");
 
   // (a) Recency: an asset touched THIS turn wins (tracks the latest exchange).
   if (upserts.length) {
     const lastCall = upserts[upserts.length - 1];
     const eff = effectiveCaptured(lastCall, state.assets);
-    const isNew = typeof lastCall.args.id !== "string";
+    const isNew = typeof lastCall.args.id !== "string" && !personCaptured;
     const topic = realEstateFieldTopic(eff, isNew);
     if (topic) return probe("field", topic, REAL_ESTATE_ASK[topic]);
     return probe("another_asset", "another_asset", REAL_ESTATE_ASK.another_asset);
