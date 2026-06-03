@@ -11,7 +11,7 @@ export default async function SigninPage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/start");
+    redirect("/setup");
   }
 
   return (

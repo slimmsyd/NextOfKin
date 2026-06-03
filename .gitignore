@@ -17,6 +17,17 @@
 /.next/
 /out/
 
+# server-side voice/TTS cache
+/.cache/
+
+# graphify generated output
+/graphify-out/
+
+# python evals
+/evals/.venv/
+/evals/report.md
+__pycache__/
+
 # production
 /build
 

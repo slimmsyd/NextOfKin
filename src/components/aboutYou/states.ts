@@ -64,3 +64,18 @@ export const MARITAL_STATUSES: Array<{ value: string; label: string }> = [
   { value: "widowed", label: "Widowed" },
   { value: "separated", label: "Separated" },
 ];
+
+// Marital statuses for which a spouse/partner block is relevant.
+export const SPOUSE_STATUSES = new Set([
+  "married",
+  "domestic_partnership",
+  "separated",
+]);
+
+export const HOUSEHOLD_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "just_me", label: "Just me" },
+  { value: "spouse_partner", label: "Me and my spouse or partner" },
+  { value: "children", label: "Me and my children" },
+  { value: "multigenerational", label: "Multiple generations under one roof" },
+  { value: "other", label: "Others who depend on me" },
+];

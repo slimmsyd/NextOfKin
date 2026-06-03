@@ -73,7 +73,8 @@ If a request implies V1.5 or V2 work, flag it and ask before building.
 |---|---|
 | Frontend | **Next.js 16.2.6** (App Router, Turbopack), React 19.2, TypeScript 5.9, Tailwind 4, shadcn/ui |
 | Backend | Supabase (Postgres + Auth + RLS) via Prisma 7.x ORM with `@prisma/adapter-pg` driver. **Wired.** |
-| Agent runtime | Claude API with structured outputs and tool use — *to be added* |
+| Agent runtime | **DeepSeek** (`deepseek-chat`) via OpenAI-compatible endpoint, dropped into the Next.js `ChapterBrain` seam — **wired**. Provider-agnostic via env (`src/lib/yourLife/llm.ts`); Python is evals-only. V1 uses `api.deepseek.com` (**family-only**, PRC jurisdiction); moving to a Western zero-retention host + DPA is a hard gate before non-family users — see `PlatformDocuments/ADR-001-deepseek-agent.md` + `PRE-PUBLIC-LAUNCH-CHECKLIST.md`. Stays in the conversation/extraction layer only (rule #1). |
+| Voice | **ElevenLabs** for narration (TTS, `/api/voice/[scene]`) and speech-to-text (**Scribe `scribe_v2`**, record-then-transcribe via `/api/your-life/transcribe`) — **wired**. One `ELEVENLABS_API_KEY`. STT is conversation-layer only (rule #1); family voice is logged by default (zero-retention is enterprise-only) — a hard gate before non-family users, see `PlatformDocuments/ADR-002-speech-to-text-provider.md` + `PRE-PUBLIC-LAUNCH-CHECKLIST.md`. Seam to evolve to live word-by-word streaming later. |
 | Document engine | Attorney-reviewed templates + deterministic data binding — *V1.5* |
 | Background jobs | n8n for cron + webhooks — *to be added when needed* |
 | Email / SMS | Postmark or Resend + Twilio — *to be added when needed* |

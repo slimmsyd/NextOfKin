@@ -15,7 +15,7 @@ export async function getLandingCta(): Promise<LandingCta> {
   } = await supabase.auth.getUser();
 
   if (user) {
-    return { label: "Continue", href: "/start", isAuthenticated: true };
+    return { label: "Continue", href: "/setup", isAuthenticated: true };
   }
   return { label: "Start your plan", href: "/signup", isAuthenticated: false };
 }

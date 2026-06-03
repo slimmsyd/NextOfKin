@@ -1,25 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { PhaseHeader } from "@/components/setup/PhaseHeader";
 import { AutoSaveBadge } from "@/components/forms";
 import type { AutoSaveStatus } from "@/components/forms";
+import { SetupIntakeShell } from "@/components/setup/SetupIntakeShell";
+import type { AboutYouData } from "@/lib/setup/about-you-types";
 import { AboutYouForm } from "./AboutYouForm";
 
-export function AboutYouPage() {
+export function AboutYouPage({ initial }: { initial: AboutYouData }) {
   const [status, setStatus] = useState<AutoSaveStatus>("idle");
 
   return (
-    <main className="min-h-screen bg-surface-lavender-100 flex flex-col">
-      <PhaseHeader
-        phase={2}
-        phaseLabel="About you"
-        rightSlot={<AutoSaveBadge status={status} />}
-        showProgress={false}
-      />
-      <div className="flex-1 flex items-start md:items-center">
-        <AboutYouForm onStatusChange={setStatus} />
-      </div>
-    </main>
+    <SetupIntakeShell rightSlot={<AutoSaveBadge status={status} />}>
+      <AboutYouForm initial={initial} onStatusChange={setStatus} />
+    </SetupIntakeShell>
   );
 }

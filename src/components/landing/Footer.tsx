@@ -11,15 +11,6 @@ const columns = [
     ],
   },
   {
-    title: "Company",
-    links: [
-      { label: "OnCode Software", href: "#" },
-      { label: "Built in Raleigh", href: "#" },
-      { label: "Partners", href: "#" },
-      { label: "Press", href: "#" },
-    ],
-  },
-  {
     title: "Resources",
     links: [
       { label: "Heirs property guide", href: "#" },
@@ -79,7 +70,7 @@ export function Footer() {
           </form>
         </div>
 
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-5 gap-10 md:gap-8">
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8">
           <div className="col-span-2 md:col-span-1">
             <p className="text-xl font-semibold tracking-tight">NextOfKin</p>
             <p className="mt-3 text-sm text-white/60 leading-relaxed max-w-xs">

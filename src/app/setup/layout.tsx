@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SetupIntakeShell } from "@/components/setup/SetupIntakeShell";
 
 export const metadata: Metadata = {
   title: "Welcome · NextOfKin",
@@ -10,5 +11,5 @@ export default function SetupLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <SetupIntakeShell>{children}</SetupIntakeShell>;
 }

@@ -1,0 +1,282 @@
+/* ─────────────────────────────────────────────────────────────
+   Kinnected Design System · Tokens
+   Brand: Kinnected ("Preserve Your Family Legacy Forever")
+   ───────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  /* ── Brand palette ─────────────────────────────────────────── */
+  /* The signature gradient: a violet-indigo blend used on every CTA */
+  --brand-violet-500: #5852F5;   /* gradient start */
+  --brand-violet-600: #7B61FF;   /* gradient end */
+  --brand-indigo-700: #3B35C3;   /* deep indigo · used for dashboard text + active nav */
+  --brand-purple-500: #8B5CF6;   /* lighter purple · used for tags and accents */
+  --brand-indigo-500: #6366F1;   /* secondary indigo · paired with #8B5CF6 in subscribe CTAs */
+  --brand-purple-glow: rgba(123, 97, 255, 0.15); /* shadow under purple CTAs */
+
+  --brand-gradient-primary: linear-gradient(135deg, rgba(88, 82, 245, 0.95), rgba(123, 97, 255, 0.95));
+  --brand-gradient-subscribe: linear-gradient(to right, #8B5CF6, #6366F1);
+  --brand-gradient-radial-glow: radial-gradient(circle at 50% 120%, rgba(120, 119, 198, 0.3), transparent 60%);
+
+  /* ── Pastel surface tints (the "scene" backgrounds) ────────── */
+  /* Used on the homepage feature cards — soft, single-color washes. */
+  --surface-lavender: #F8F7FF;   /* the dominant purple-tinted surface */
+  --surface-mint:     #F0FFF4;
+  --surface-rose:     #FFF5F5;
+  --surface-warm:     #F5F5F5;   /* "Manage the Kingdom" wash */
+  --surface-violet-tint: #F0EFFF; /* dashboard sidebar active states */
+  --surface-violet-tint-strong: #E6E5FF; /* hover on the tint above */
+
+  /* ── Neutrals (Foundation) ─────────────────────────────────── */
+  /* These shadow shadcn's neutral scale because the codebase uses Tailwind defaults heavily. */
+  --bg:           #FFFFFF;
+  --bg-subtle:    #FAFAFA;       /* footer wash */
+  --fg:           #0A0A0A;       /* near-black: hsl(0 0% 3.9%) */
+  --fg-strong:    #111827;       /* gray-900 — headings */
+  --fg-body:      #4B5563;       /* gray-600 — paragraph copy */
+  --fg-muted:     #6B7280;       /* gray-500 — quiet supporting text */
+  --fg-faint:     #9CA3AF;       /* gray-400 — captions, attributions */
+
+  --border:        #E5E7EB;      /* gray-200 — card outlines */
+  --border-subtle: #F3F4F6;      /* gray-100 — soft dividers */
+  --border-hairline: #2020201a;  /* 10% black — the scrolled-nav border */
+  --border-purple-soft: rgba(139, 92, 246, 0.12); /* purple-100/30 — footer dividers */
+
+  /* ── Semantic / status ─────────────────────────────────────── */
+  --status-success: #10B981;     /* emerald-500 — "all systems operational" */
+  --status-warning: #FACC15;     /* yellow-400 — "Best Value" pill */
+  --status-error:   #EF4444;     /* red-500 */
+  --status-mana:    #F59E0B;     /* amber-500 — crown icon, gamification */
+
+  /* ── Type ──────────────────────────────────────────────────── */
+  /* Inter for everything — the product uses next/font Inter exclusively.
+     Instrument Serif is a curated addition for soulful editorial moments
+     (epitaph quotes, hero accents) — use sparingly. */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif-display: 'Instrument Serif', 'Iowan Old Style', 'Apple Garamond', Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Display sizes lean heavy & tight, matching the .text-5xl/6xl/7xl + tracking-tighter
+     usage in the homepage. Every size is fluid: clamp(mobile-floor, viewport-scale, desktop-cap). */
+  --text-display-xl: clamp(40px, 4vw + 24px, 80px);  /* "Manage the Kingdom" 7xl */
+  --text-display-lg: clamp(36px, 3vw + 22px, 60px);
+  --text-display-md: clamp(30px, 2.5vw + 18px, 48px);/* 5xl section headers */
+  --text-h1:         clamp(26px, 1.5vw + 18px, 36px);
+  --text-h2:         clamp(22px, 1vw + 16px, 30px);
+  --text-h3:         clamp(18px, 0.5vw + 16px, 24px);
+  --text-h4:         clamp(16px, 0.25vw + 14px, 20px);
+  --text-body-lg:    clamp(16px, 0.25vw + 14px, 18px);
+  --text-body:       16px;
+  --text-body-sm:    15px;       /* footer link size */
+  --text-caption:    14px;
+  --text-micro:      12px;       /* nav links — explicit !text-[12px] in source */
+
+  --leading-tight: 1.1;          /* display, tracking-tighter look */
+  --leading-snug:  1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;        /* long-form FAQ answers */
+
+  --tracking-tighter: -0.04em;   /* display */
+  --tracking-tight:   -0.02em;   /* h2/h3 */
+  --tracking-normal:  0;
+  --tracking-wide:    0.01em;
+
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semibold: 600;
+  --weight-bold:    700;
+  --weight-black:   800;
+
+  /* ── Spacing scale (Tailwind-aligned 4px grid) ─────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Fluid layout rhythm — section padding, page gutter, container width.
+     Use these instead of fixed values so layouts breathe naturally between
+     360px and 1920px without media queries. */
+  --gutter:           clamp(16px, 4vw, 52px);   /* matches navbar md:px-[52px] px-8 */
+  --section-y:        clamp(48px, 6vw + 16px, 128px);
+  --section-y-tight:  clamp(32px, 4vw + 8px, 80px);
+  --container-max:    1400px;                   /* the .max-w-[1400px] used site-wide */
+  --container-narrow: 950px;                    /* hero copy column */
+  --container-text:   800px;                    /* FAQ / long-form */
+
+  /* ── Radii ─────────────────────────────────────────────────── */
+  /* Kinnected leans on generous, hand-feeling curves — pills and 2xl/3xl on cards. */
+  --radius-sm:   6px;       /* tags */
+  --radius-md:   8px;       /* inputs */
+  --radius-lg:   12px;      /* small cards / nested */
+  --radius-xl:   16px;      /* tiles */
+  --radius-2xl:  20px;      /* feature card */
+  --radius-3xl:  24px;      /* the marquee homepage cards */
+  --radius-pill: 9999px;    /* every CTA */
+
+  /* ── Shadow / elevation ────────────────────────────────────── */
+  /* Two distinct flavours: soft neutral (cards) and purple glow (CTAs). */
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm:  0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-md:  0 4px 20px rgba(0, 0, 0, 0.10);    /* video container, screenshot frame */
+  --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-xl:  0 20px 40px rgba(0, 0, 0, 0.10);
+
+  --shadow-cta-violet:
+    0 2px 20px rgba(123, 97, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  --shadow-cta-violet-hover:
+    0 6px 30px rgba(123, 97, 255, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+  /* ── Motion ────────────────────────────────────────────────── */
+  /* Long, deliberate durations on CTAs (500ms) and entrance fades (600–800ms) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:   200ms;
+  --duration-base:   300ms;
+  --duration-slow:   500ms;
+  --duration-entrance: 600ms;
+}
+
+/* ───────────────────── Semantic mixins ───────────────────── */
+
+/* Apply to <body> in any artifact built from this system. */
+.kn-body {
+  font-family: var(--font-sans);
+  font-size:   var(--text-body);
+  line-height: var(--leading-normal);
+  color:       var(--fg);
+  background:  var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.kn-h1, h1.kn {
+  font-family: var(--font-sans);
+  font-size:   var(--text-display-md);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tighter);
+  font-weight: var(--weight-bold);
+  color:       var(--fg);
+}
+
+.kn-h2, h2.kn {
+  font-family: var(--font-sans);
+  font-size:   var(--text-h2);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  font-weight: var(--weight-bold);
+  color:       var(--fg);
+}
+
+.kn-h3, h3.kn {
+  font-family: var(--font-sans);
+  font-size:   var(--text-h3);
+  line-height: var(--leading-snug);
+  font-weight: var(--weight-semibold);
+  color:       var(--fg);
+}
+
+.kn-body-lg { font-size: var(--text-body-lg); line-height: var(--leading-relaxed); color: var(--fg-body); }
+.kn-body-md { font-size: var(--text-body);    line-height: var(--leading-normal);  color: var(--fg-body); }
+.kn-caption { font-size: var(--text-caption); line-height: var(--leading-normal);  color: var(--fg-muted); }
+.kn-micro   { font-size: var(--text-micro);   line-height: var(--leading-normal);  color: var(--fg-muted); letter-spacing: var(--tracking-wide); }
+
+.kn-quote {
+  font-family: var(--font-serif-display);
+  font-style:  italic;
+  font-size:   var(--text-h3);
+  line-height: var(--leading-snug);
+  color:       var(--fg-body);
+}
+
+/* The CTA shape used everywhere */
+.kn-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-gradient-primary);
+  color: #FFFFFF;
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-cta-violet);
+  transition: transform var(--duration-slow) var(--ease-out),
+              box-shadow var(--duration-slow) var(--ease-out);
+  cursor: pointer;
+}
+.kn-cta-primary:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-cta-violet-hover);
+}
+
+.kn-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--fg-body);
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  border: 1px solid var(--border);
+  transition: background var(--duration-base) var(--ease-out);
+  cursor: pointer;
+}
+.kn-cta-secondary:hover { background: var(--bg-subtle); }
+
+/* ───────────────────── Responsive helpers ───────────────────── */
+
+/* Page container — clamps width and gutter without media queries. */
+.kn-container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.kn-container--narrow { max-width: var(--container-narrow); }
+.kn-container--text   { max-width: var(--container-text); }
+
+.kn-section {
+  padding-block: var(--section-y);
+}
+.kn-section--tight {
+  padding-block: var(--section-y-tight);
+}
+
+/* Responsive grid that auto-collapses without media queries. */
+.kn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: var(--space-6);
+}
+.kn-grid--wide {
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+}
+
+/* Fluid stack — vertical spacing that grows with viewport. */
+.kn-stack > * + * {
+  margin-top: clamp(var(--space-3), 1.5vw, var(--space-6));
+}
+.kn-stack--lg > * + * {
+  margin-top: clamp(var(--space-6), 3vw, var(--space-12));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -43,5 +43,5 @@ export async function signupAction(formData: FormData): Promise<SignupResult> {
     return { ok: false, error: error.message };
   }
 
-  redirect("/start");
+  redirect("/setup");
 }
