@@ -24,18 +24,25 @@ from .score import score_case
 
 ROOT = Path(__file__).resolve().parent.parent
 CONTRACT_PATH = ROOT / "agent-contract.json"
-DATASET_PATH = ROOT / "evals" / "datasets" / "real_estate.jsonl"
+DATASETS_DIR = ROOT / "evals" / "datasets"
 REPORT_PATH = ROOT / "evals" / "report.md"
-CHAPTER = "real_estate"
+
+# (chapter, dataset file). Each chapter's cases are scored against that chapter's
+# goal from the contract, so financial/beneficiary/completion are now covered, not
+# just real estate.
+DATASETS = [
+    ("real_estate", "real_estate.jsonl"),
+    ("financial_accounts", "financial_accounts.jsonl"),
+]
 
 
 def load_contract() -> dict:
     return json.loads(CONTRACT_PATH.read_text())
 
 
-def load_cases() -> list[dict]:
+def load_cases(filename: str) -> list[dict]:
     cases = []
-    for line in DATASET_PATH.read_text().splitlines():
+    for line in (DATASETS_DIR / filename).read_text().splitlines():
         line = line.strip()
         if line:
             cases.append(json.loads(line))
@@ -70,9 +77,9 @@ def serialize_profile(profile: dict) -> str:
     return f"{who}\n{items}"
 
 
-def build_system(contract: dict, profile: dict) -> str:
+def build_system(contract: dict, profile: dict, chapter: str) -> str:
     # Mirrors buildExtractionSystem in agentContract.ts (the capture path).
-    goal = contract["chapterGoals"][CHAPTER]
+    goal = contract["chapterGoals"][chapter]
     return (
         f"{contract['extractionRules']}{goal}\n\n--- CURRENT RECORD ---\n"
         + serialize_profile(profile)
@@ -99,7 +106,7 @@ def extract_tool_calls(message) -> list[dict]:
     return calls
 
 
-def run_live(contract: dict, cases: list[dict]) -> list[dict]:
+def run_live(contract: dict) -> list[dict]:
     from openai import OpenAI
 
     client = OpenAI(
@@ -110,31 +117,36 @@ def run_live(contract: dict, cases: list[dict]) -> list[dict]:
     tools = contract["tools"]
 
     results = []
-    for case in cases:
-        system = build_system(contract, case["profile"])
-        messages = [{"role": "system", "content": system}, *build_messages(case)]
-        resp = client.chat.completions.create(
-            model=model, messages=messages, tools=tools, tool_choice="auto"
-        )
-        tool_calls = extract_tool_calls(resp.choices[0].message)
-        verdict = score_case(case, tool_calls)
-        results.append({"id": case["id"], "mode": case["mode"], **verdict, "tool_calls": tool_calls})
+    for chapter, filename in DATASETS:
+        for case in load_cases(filename):
+            system = build_system(contract, case["profile"], case.get("chapter", chapter))
+            messages = [{"role": "system", "content": system}, *build_messages(case)]
+            resp = client.chat.completions.create(
+                model=model, messages=messages, tools=tools, tool_choice="auto"
+            )
+            tool_calls = extract_tool_calls(resp.choices[0].message)
+            verdict = score_case(case, tool_calls)
+            results.append(
+                {"id": case["id"], "chapter": chapter, "mode": case["mode"], **verdict, "tool_calls": tool_calls}
+            )
     return results
 
 
 def write_report(results: list[dict]) -> None:
     passed = sum(1 for r in results if r["passed"])
     lines = [
-        "# Agent eval report — real estate",
+        "# Agent eval report",
         "",
         f"**{passed}/{len(results)} passed**",
         "",
-        "| case | mode | result | detail |",
-        "|------|------|--------|--------|",
+        "| case | chapter | mode | result | detail |",
+        "|------|---------|------|--------|--------|",
     ]
     for r in results:
         mark = "PASS" if r["passed"] else "FAIL"
-        lines.append(f"| {r['id']} | {r['mode']} | {mark} | {r['reason']} |")
+        lines.append(
+            f"| {r['id']} | {r.get('chapter', '')} | {r['mode']} | {mark} | {r['reason']} |"
+        )
     REPORT_PATH.write_text("\n".join(lines) + "\n")
 
 
@@ -144,26 +156,33 @@ def main() -> int:
     args = ap.parse_args()
 
     contract = load_contract()
-    cases = load_cases()
-    print(f"Loaded contract ({len(contract['tools'])} tools) and {len(cases)} cases.")
+    total_cases = sum(len(load_cases(f)) for _, f in DATASETS)
+    print(
+        f"Loaded contract ({len(contract['tools'])} tools) and "
+        f"{total_cases} cases across {len(DATASETS)} chapters."
+    )
 
     if args.check:
-        for case in cases:
-            assert "expect" in case, f"case {case.get('id')} missing expect"
-            _ = build_system(contract, case["profile"])
-            _ = build_messages(case)
-        print("--check OK: contract + dataset assemble cleanly. No API calls made.")
+        for chapter, filename in DATASETS:
+            assert chapter in contract["chapterGoals"], (
+                f"contract is missing a chapterGoal for '{chapter}'"
+            )
+            for case in load_cases(filename):
+                assert "expect" in case, f"case {case.get('id')} missing expect"
+                _ = build_system(contract, case["profile"], case.get("chapter", chapter))
+                _ = build_messages(case)
+        print("--check OK: contract + datasets assemble cleanly. No API calls made.")
         return 0
 
     if not os.environ.get("DEEPSEEK_API_KEY"):
         print("DEEPSEEK_API_KEY not set — cannot run live evals. Use --check, or set the key.")
         return 1
 
-    results = run_live(contract, cases)
+    results = run_live(contract)
     write_report(results)
     passed = sum(1 for r in results if r["passed"])
     for r in results:
-        print(f"  [{'PASS' if r['passed'] else 'FAIL'}] {r['id']} ({r['mode']}): {r['reason']}")
+        print(f"  [{'PASS' if r['passed'] else 'FAIL'}] {r['id']} ({r['chapter']}): {r['reason']}")
     print(f"\n{passed}/{len(results)} passed. Report: {REPORT_PATH}")
     return 0 if passed == len(results) else 2
 

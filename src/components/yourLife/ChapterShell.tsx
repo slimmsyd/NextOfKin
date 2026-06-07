@@ -213,10 +213,14 @@ export function ChapterShell({
   const saveStatus: AutoSaveStatus =
     editSaveStatus !== "idle" ? editSaveStatus : chatDerivedStatus;
 
-  const onSubmit = (text: string, inputMethod: "voice" | "text") => {
+  const onSubmit = (
+    text: string,
+    inputMethod: "voice" | "text",
+    chipSource?: string | null,
+  ) => {
     // Clear the current chips immediately; the fresh set streams back with the reply.
     setSuggestions([]);
-    sendMessage({ text }, { body: { inputMethod } });
+    sendMessage({ text }, { body: { inputMethod, chipSource: chipSource ?? null } });
   };
 
   const onFieldChange = async (

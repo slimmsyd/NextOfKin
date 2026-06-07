@@ -36,12 +36,12 @@ export default async function HomePage() {
     <>
       <AnnouncementBar />
       <main>
-        <div className="relative">
-          <div className="absolute inset-x-0 top-0 z-50 flex justify-center px-4 py-4 md:py-5">
+        <div className="sticky top-0 z-50 h-0">
+          <div className="flex justify-center px-4 py-4 md:py-5">
             <Nav cta={cta} />
           </div>
-          <Hero cta={cta} />
         </div>
+        <Hero cta={cta} />
         <TrustedBy />
         <ClosingTheGap />
         <WhatWeDo />

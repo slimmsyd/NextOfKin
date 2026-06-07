@@ -11,12 +11,9 @@ type GalleryItem = {
 };
 
 const items: GalleryItem[] = [
-  { alt: "Family portrait archive, North Carolina, 1972" },
-  { alt: "Newborn welcomed home, North Carolina, 2024" },
-  { alt: "Sunday service, North Carolina, archive" },
-  { alt: "Funeral procession, New York, 1989" },
-  { alt: "Hands at the table, archive" },
-  { alt: "Heirloom Bible, archive" },
+  { src: "/gallery/Family1.JPG", alt: "Family portrait" },
+  { src: "/gallery/Child2.jpeg", alt: "Child portrait" },
+  { src: "/gallery/Family2.JPG", alt: "Family portrait" },
 ];
 
 function GalleryCard({ item }: { item: GalleryItem }) {

@@ -32,8 +32,32 @@ Output: per-case PASS/FAIL in the terminal + a summary in `evals/report.md`.
 
 ## Add cases
 
-Append JSONL lines to `datasets/real_estate.jsonl`. Each case: a prior
-`profile` (with asset `id`s for entity-resolution tests), optional `history`,
-the `user` message, and an `expect` block (see `score.py` for the supported
-checks: `must_create`, `forbid_create`, `must_reference_id`, `args_present`,
-`args_absent`, `args_value`, `args_value_substr`, `args_numeric`).
+Append JSONL lines to `datasets/<chapter>.jsonl` (`real_estate.jsonl` or
+`financial_accounts.jsonl`). Each case: a prior `profile` (with asset `id`s for
+entity-resolution tests), optional `history`, the `user` message, and an
+`expect` block (see `score.py` for the supported checks: `must_create`,
+`forbid_create`, `must_reference_id`, `args_present`, `args_absent`,
+`args_value`, `args_value_substr`, `args_numeric`).
+
+## Capture flywheel (real turns -> eval cases)
+
+Instead of authoring every case by hand, harvest them from real onboarding turns:
+
+```bash
+# Mine stored turns into eval-case STUBS (real data -> evals/review/, gitignored):
+pnpm tsx --env-file=.env.local scripts/harvest-eval-cases.ts
+
+# See what people say, the intent mix, and the desync (capture-failure) rate:
+pnpm tsx --env-file=.env.local scripts/onboarding-insights.ts
+```
+
+`harvest-eval-cases.ts` flags two kinds of turn:
+- **desync** (substantive input, zero capture — the production canary): emitted as
+  `mode: under_extraction` with a BLANK `expect` for you to fill in.
+- **capture** (tools fired): emitted with `expect` derived from the applied tool.
+
+Promotion is manual: review `evals/review/<chapter>-harvest.jsonl`, fill/confirm
+each `expect`, and move good cases into `datasets/<chapter>.jsonl`. `evals/review/`
+is gitignored — it holds real family data and never leaves the family boundary.
+Few-shot examples in `fewshot/` (injected into the live extraction prompt) must be
+**synthetic** — see `src/lib/yourLife/fewshot.ts`.

@@ -9,7 +9,9 @@ import {
 } from "@/lib/yourLife/agentContract";
 import type { ChapterId } from "@/lib/yourLife/chapters";
 import { nextProbe } from "@/lib/yourLife/interviewFlow";
+import { OFFERED_TOOLS } from "@/lib/yourLife/tools/registry";
 import { UpsertAssetSchema } from "@/lib/yourLife/tools/upsertAsset";
+import { AddFinancialAccountSchema } from "@/lib/yourLife/tools/addFinancialAccount";
 import { AddPersonSchema } from "@/lib/yourLife/tools/addPerson";
 import { FlagHeirsPropertyRiskSchema } from "@/lib/yourLife/tools/flagHeirsPropertyRisk";
 import { ConfirmChapterCompleteSchema } from "@/lib/yourLife/tools/confirmChapterComplete";
@@ -25,17 +27,24 @@ const FALLBACK: ScriptedTurn = {
 // Tools are defined WITHOUT `execute`: the SDK only returns the tool calls, and
 // the chat route executes them via validateAndApply (keeping the auth/RLS/
 // persistence boundary in Next.js). Schemas are reused from the tool layer, so
-// there's one definition per tool.
-function realEstateTools() {
+// there's one definition per tool. Which of these the model is OFFERED per
+// chapter comes from the registry (tools/registry.ts), guarded by the contract
+// test, so the offered set can never drift from what the route can apply.
+function allToolDefs() {
   return {
     upsert_asset: tool({
       description:
-        "Add or update a real-estate property. Pass `id` (from the record) to UPDATE an existing one; omit `id` to add a new one. Only include fields the person actually stated.",
+        "Add or update a real-estate property (a home, land, or other real property). Pass `id` (from the record) to UPDATE an existing one; omit `id` to add a new one. Only include fields the person actually stated.",
       inputSchema: UpsertAssetSchema,
+    }),
+    add_financial_account: tool({
+      description:
+        "Add a financial account: checking, savings, brokerage, 401(k), or IRA. Pass institution (the bank or provider) and account_type. Use this for bank, retirement, and investment accounts, NOT for real estate.",
+      inputSchema: AddFinancialAccountSchema,
     }),
     add_person: tool({
       description:
-        "Record a person who should RECEIVE a property (a recipient/beneficiary). Pass full_name (and relationship if stated) and set asset_id to the property's id from the record. Pass the person's `id` to UPDATE an existing one. The owner you are talking to is never the recipient.",
+        "Record a person the owner wants to protect: a beneficiary or recipient. Pass full_name (and relationship if stated). If they should receive a SPECIFIC property, set asset_id to that property's id from the record; if they are a general heir with no specific asset, omit asset_id. Pass the person's `id` to UPDATE an existing one. The owner you are talking to is never the recipient.",
       inputSchema: AddPersonSchema,
     }),
     flag_heirs_property_risk: tool({
@@ -45,7 +54,7 @@ function realEstateTools() {
     }),
     confirm_chapter_complete: tool({
       description:
-        "Call when the person has finished sharing their property and has nothing to add.",
+        "Call when the person has finished sharing for this chapter and has nothing to add, or signals they want to move on. This advances the interview.",
       inputSchema: ConfirmChapterCompleteSchema,
     }),
     defer_chapter: tool({
@@ -53,6 +62,16 @@ function realEstateTools() {
       inputSchema: DeferChapterSchema,
     }),
   };
+}
+
+// The subset of tools offered to the model for a given chapter, per the registry.
+function toolsForChapter(chapterId: ChapterId) {
+  const all = allToolDefs();
+  const offered: Record<string, (typeof all)[keyof typeof all]> = {};
+  for (const name of OFFERED_TOOLS[chapterId]) {
+    if (name in all) offered[name] = all[name as keyof typeof all];
+  }
+  return offered;
 }
 
 /**
@@ -72,7 +91,7 @@ export function makeDeepSeekBrain(chapterId: ChapterId): ChapterBrain {
         model,
         system: buildExtractionSystem(chapterId, state),
         messages: buildMessages(state, userText),
-        tools: realEstateTools(),
+        tools: toolsForChapter(chapterId),
         toolChoice: "auto",
       });
       const toolCalls = extraction.toolCalls.map((tc) => ({

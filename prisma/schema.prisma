@@ -497,6 +497,13 @@ model ConversationTurn {
   text      String
   toolCalls Json?    @map("tool_calls")
   bucket    String?
+  // Capture-intelligence signals (the onboarding flywheel). inputMethod + desync
+  // are queryable columns (voice/text split, capture-failure rate); meta holds the
+  // flexible rest (probe topic, extraction emitted/applied/failed, chips shown,
+  // chip source). See src/lib/yourLife/turnMeta.ts.
+  inputMethod String?  @map("input_method")
+  desync      Boolean?
+  meta        Json?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

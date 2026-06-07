@@ -19,7 +19,7 @@ function SparkIcon({ className }: { className?: string }) {
 
 type RecommendedQuestionsProps = {
   suggestions: Suggestion[];
-  onPick: (text: string) => void;
+  onPick: (text: string, id: string) => void;
 };
 
 export function RecommendedQuestions({
@@ -43,7 +43,7 @@ export function RecommendedQuestions({
           <motion.button
             key={s.id}
             type="button"
-            onClick={() => onPick(s.text)}
+            onClick={() => onPick(s.text, s.id)}
             initial={reduceMotion ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={

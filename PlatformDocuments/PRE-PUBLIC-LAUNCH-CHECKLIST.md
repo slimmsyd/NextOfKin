@@ -27,6 +27,13 @@
       (`ELEVENLABS_STT_ZERO_RETENTION=true`, enterprise plan) or switch to a
       zero-retention STT host + DPA. Env-light by design. See
       `ADR-002-speech-to-text-provider.md`.
+- [ ] **Captured onboarding data (the flywheel)** — `ConversationTurn` now stores
+      per-turn capture signals (`inputMethod`, `desync`, `meta`); the harvest +
+      insights scripts export real turns to `evals/review/` (gitignored). This stays
+      inside the family boundary. Before any non-family or training use: PII
+      tokenization + provenance fields (`source_turn_id`, `capture_method`,
+      `confidence`, `confirmed`) + DPA. Few-shot examples sent to the LLM
+      (`src/lib/yourLife/fewshot.ts`) must remain synthetic.
 
 ### Data accuracy (the confirmation system)
 - [ ] **Provenance** on every captured field: `source_turn_id`,

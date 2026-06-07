@@ -28,6 +28,10 @@
 /evals/report.md
 __pycache__/
 
+# Harvested onboarding data + analytics (real family data — internal only,
+# never committed, never sent to a third party). See ADR + launch checklist.
+/evals/review/
+
 # production
 /build
 

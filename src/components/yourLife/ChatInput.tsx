@@ -9,7 +9,11 @@ import { VoiceCaptureInline } from "./VoiceCaptureInline";
 
 type ChatInputProps = {
   disabled: boolean;
-  onSubmit: (text: string, inputMethod: "voice" | "text") => void;
+  onSubmit: (
+    text: string,
+    inputMethod: "voice" | "text",
+    chipSource?: string | null,
+  ) => void;
   suggestions?: Suggestion[];
 };
 
@@ -57,6 +61,9 @@ export function ChatInput({ disabled, onSubmit, suggestions }: ChatInputProps) {
   // Tracks whether the pending text came from the mic (drives voice read-back of
   // binding fields). Flips to false the moment the user types manually.
   const voiceUsedRef = useRef(false);
+  // Which recommended-question chip (if any) seeded the pending text. Flips to null
+  // on manual edit. Captured per turn for chip tap-through analytics.
+  const chipSourceRef = useRef<string | null>(null);
 
   // The mic opens the capture morph (below). The recorder captures audio and, on
   // confirm, transcribes it server-side; the text only lands in the composer when the
@@ -75,9 +82,14 @@ export function ChatInput({ disabled, onSubmit, suggestions }: ChatInputProps) {
   const submit = () => {
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
-    onSubmit(trimmed, voiceUsedRef.current ? "voice" : "text");
+    onSubmit(
+      trimmed,
+      voiceUsedRef.current ? "voice" : "text",
+      chipSourceRef.current,
+    );
     setValue("");
     voiceUsedRef.current = false;
+    chipSourceRef.current = null;
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -89,8 +101,9 @@ export function ChatInput({ disabled, onSubmit, suggestions }: ChatInputProps) {
 
   // Prefill (never auto-send): drop the question into the composer so the user
   // can edit it, then send. A picked question is typed, not voice.
-  const pick = (text: string) => {
+  const pick = (text: string, chipId: string) => {
     voiceUsedRef.current = false;
+    chipSourceRef.current = chipId;
     setValue(text);
     const el = textareaRef.current;
     if (el) {
@@ -116,6 +129,7 @@ export function ChatInput({ disabled, onSubmit, suggestions }: ChatInputProps) {
     const captured = await stopAndTranscribe();
     if (!captured) return;
     voiceUsedRef.current = true;
+    chipSourceRef.current = null;
     setCapturing(false);
     setValue((prev) => (prev ? `${prev} ${captured}` : captured));
     const el = textareaRef.current;
@@ -176,6 +190,7 @@ export function ChatInput({ disabled, onSubmit, suggestions }: ChatInputProps) {
               value={value}
               onChange={(e) => {
                 voiceUsedRef.current = false;
+                chipSourceRef.current = null;
                 setValue(e.target.value);
               }}
               onKeyDown={onKeyDown}
