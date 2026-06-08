@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import {
   createUIMessageStream,
   createUIMessageStreamResponse,
@@ -15,6 +15,7 @@ import { loadChapterState } from "@/lib/yourLife/loadChapterState";
 import { getChapter } from "@/lib/yourLife/chapters";
 import { getBrain } from "@/lib/yourLife/brains";
 import { chipsForProbe, openingProbe } from "@/lib/yourLife/interviewFlow";
+import { flushTraces } from "@/lib/yourLife/tracing";
 
 export const runtime = "nodejs";
 
@@ -231,6 +232,11 @@ export async function POST(req: Request) {
     },
     onError: (e) => (e instanceof Error ? e.message : "Stream error"),
   });
+
+  // Flush any LangSmith trace batches after the response is sent (no-op unless
+  // tracing is enabled). The brain's LLM calls already ran above, so the spans
+  // are queued by now.
+  after(flushTraces);
 
   return createUIMessageStreamResponse({ stream });
 }

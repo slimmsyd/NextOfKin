@@ -1,6 +1,7 @@
 import "server-only";
 
-import { generateText, tool } from "ai";
+import { tool } from "ai";
+import { generateText, traceOptions } from "@/lib/yourLife/tracing";
 import { getAgentModel } from "@/lib/yourLife/llm";
 import {
   buildExtractionSystem,
@@ -93,6 +94,11 @@ export function makeDeepSeekBrain(chapterId: ChapterId): ChapterBrain {
         messages: buildMessages(state, userText),
         tools: toolsForChapter(chapterId),
         toolChoice: "auto",
+        providerOptions: traceOptions("yourlife-extraction", {
+          chapter: chapterId,
+          inputMethod,
+          stage: "extraction",
+        }),
       });
       const toolCalls = extraction.toolCalls.map((tc) => ({
         name: tc.toolName,
@@ -114,6 +120,16 @@ export function makeDeepSeekBrain(chapterId: ChapterId): ChapterBrain {
         model,
         system: buildReplySystem(state, toolCalls, inputMethod, probe),
         messages: buildMessages(state, userText),
+        providerOptions: traceOptions("yourlife-reply", {
+          chapter: chapterId,
+          inputMethod,
+          stage: "reply",
+          // The capture signal we are debugging: what extraction emitted, so a
+          // reply that advances the conversation while nothing was captured
+          // (the desync class) is visible in the trace without any PII.
+          capturedTools: toolCalls.map((t) => t.name),
+          probeTopic: probe.topic,
+        }),
       });
       const text =
         reply.text?.trim() ||
