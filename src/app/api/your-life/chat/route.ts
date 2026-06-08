@@ -9,7 +9,8 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { validateAndApply } from "@/lib/yourLife/tools";
-import { dataPartForResult } from "@/lib/yourLife/dataParts";
+import { dataPartForResult, ASSET_TOOLS } from "@/lib/yourLife/dataParts";
+import { resolveRecipientAssetId, type NewAsset } from "@/lib/yourLife/tools/resolveLinks";
 import { isDesync, buildAgentTurnMeta } from "@/lib/yourLife/turnMeta";
 import { loadChapterState } from "@/lib/yourLife/loadChapterState";
 import { getChapter } from "@/lib/yourLife/chapters";
@@ -135,22 +136,55 @@ export async function POST(req: Request) {
       writer.write({ type: "start" });
 
       // Stream tool calls first (so the right pane updates before / during text).
+      // Apply asset captures BEFORE recipients (add_person), then progression
+      // (confirm/defer) last: a person named for an asset created THIS turn has
+      // no id to link to until that asset is applied, so we collect the new
+      // assets first and resolve the recipient link against them. Stable sort
+      // preserves model-emitted order within each group.
+      const phaseOf = (name: string) =>
+        name === "add_person"
+          ? 1
+          : name === "confirm_chapter_complete" || name === "defer_chapter"
+            ? 2
+            : 0;
+      const orderedCalls = [...turn.toolCalls].sort(
+        (a, b) => phaseOf(a.name) - phaseOf(b.name),
+      );
       const appliedResults: Array<{ name: string; data: unknown }> = [];
       const failedNames: string[] = [];
-      for (const call of turn.toolCalls) {
+      const newAssetsThisTurn: NewAsset[] = [];
+      for (const call of orderedCalls) {
+        // Resolve a same-turn recipient link: if this person should receive an
+        // asset created earlier in THIS loop, fill asset_id from its new id.
+        let args = call.args;
+        if (call.name === "add_person") {
+          const resolved = resolveRecipientAssetId(
+            args as { asset_id?: string | null; receives_new_asset_label?: string | null },
+            newAssetsThisTurn,
+          );
+          if (resolved) args = { ...args, asset_id: resolved };
+        }
         const toolCallId = `tc-${randomUUID()}`;
         writer.write({
           type: "tool-input-available",
           toolCallId,
           toolName: call.name,
-          input: call.args,
+          input: args,
         });
         const result = await validateAndApply(
-          { name: call.name, args: call.args },
+          { name: call.name, args },
           { prisma, userId: userRow.id, stateCode: userRow.stateCode },
         );
         if (result.ok) {
           appliedResults.push({ name: result.name, data: result.data });
+          // Track assets created this turn (id + label) so a later add_person
+          // can link to one by label (resolveRecipientAssetId).
+          if (ASSET_TOOLS.has(result.name)) {
+            const d = result.data as { id?: string; institution?: string | null };
+            if (d && typeof d.id === "string") {
+              newAssetsThisTurn.push({ id: d.id, label: d.institution ?? null });
+            }
+          }
           writer.write({
             type: "tool-output-available",
             toolCallId,

@@ -51,7 +51,7 @@ function allToolDefs() {
     }),
     add_person: tool({
       description:
-        "Record a person the owner wants to protect: a beneficiary or recipient. Pass full_name (and relationship if stated). If they should receive a SPECIFIC property, set asset_id to that property's id from the record; if they are a general heir with no specific asset, omit asset_id. Pass the person's `id` to UPDATE an existing one. The owner you are talking to is never the recipient.",
+        "Record a person the owner wants to protect: a beneficiary or recipient. Pass full_name (and relationship if stated). If they should receive a SPECIFIC property already on the record, set asset_id to that property's id. If they should receive an asset you are capturing in THIS SAME turn (no id yet), set receives_new_asset_label to that asset's exact label instead of asset_id. If they are a general heir with no specific asset, omit both. Pass the person's `id` to UPDATE an existing one. The owner you are talking to is never the recipient.",
       inputSchema: AddPersonSchema,
     }),
     flag_heirs_property_risk: tool({
