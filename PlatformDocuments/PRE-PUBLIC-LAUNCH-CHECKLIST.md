@@ -22,11 +22,16 @@
 - [ ] **Consent + privacy policy** disclose the AI subprocessor accurately
       (the `SetupConsent` copy was softened from "not even our team reads it" —
       finish the privacy-policy page to match).
-- [ ] **Speech-to-text retention** — family voice is transcribed by ElevenLabs
-      Scribe, which logs audio + transcripts by default. Enable zero-retention
-      (`ELEVENLABS_STT_ZERO_RETENTION=true`, enterprise plan) or switch to a
-      zero-retention STT host + DPA. Env-light by design. See
-      `ADR-002-speech-to-text-provider.md`.
+- [x] **Speech-to-text retention** — RESOLVED when whisper-flow is the default.
+      Family voice is now transcribed by self-hosted whisper-flow on our Cloud Run
+      (US, private), so no third-party STT logging. To confirm at launch: verify
+      `STT_PROVIDER=whisperFlow` in production and the service is deployed
+      `--no-allow-unauthenticated`. ElevenLabs Scribe remains only as an OFF-by-default
+      fallback. See `ADR-002` (Amendment 2026-06-08).
+- [x] **Text-to-speech / narration voice** — RESOLVED. Narration is served from
+      pre-rendered self-hosted MisoTTS clips (`public/voice/*.mp3`, `TTS_PROVIDER=static`),
+      no third party. To confirm at launch: `TTS_PROVIDER` is not `elevenlabs`, and the
+      **MisoTTS license** is confirmed for commercial use. See `ADR-003`.
 - [ ] **Captured onboarding data (the flywheel)** — `ConversationTurn` now stores
       per-turn capture signals (`inputMethod`, `desync`, `meta`); the harvest +
       insights scripts export real turns to `evals/review/` (gitignored). This stays
