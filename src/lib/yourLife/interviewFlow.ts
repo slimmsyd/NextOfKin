@@ -33,6 +33,7 @@ export type ToolCall = { name: string; args: Record<string, unknown> };
 // ---------- effective-asset helpers (merge this-turn capture over the record) ----------
 
 type EffAsset = {
+  location: string | null;
   acquisitionSource: string | null;
   titleStatus: string | null;
   deedRecorded: boolean | null;
@@ -51,6 +52,7 @@ function realEstateGap(a: EffAsset): boolean {
     (!present(a.titleStatus) || a.deedRecorded === null);
   return (
     inheritedTitleGap ||
+    !present(a.location) ||
     !present(a.acquisitionSource) ||
     !present(a.estimatedValue)
   );
@@ -71,21 +73,25 @@ function realEstateFieldTopic(a: EffAsset, isNew: boolean): string | null {
   ) {
     return "title_status";
   }
-  // 2) A newly named asset: the most natural and important next question is who
-  //    it should go to. This is what Ava asks unprompted, so leading with it
-  //    keeps her question and the chips aligned. Only fires the turn the asset
-  //    is first named (isNew) so it doesn't loop (we have no recipient field to
-  //    mark answered).
+  // 2) WHERE it is. A property record needs its address: it identifies the
+  //    asset and is what a will/deed is built on. Ask before assigning it, so
+  //    we never end up with "who gets it" before we know which property it is.
+  //    The gap walk asks once and drops it the moment a location is on record.
+  if (!present(a.location)) return "location";
+  // 3) A newly named asset: the next natural question is who it should go to.
+  //    Only fires the turn the asset is first named (isNew) so it doesn't loop
+  //    (we have no recipient field to mark answered).
   if (isNew) return "recipient";
-  // 3) How they came to own it (cheap; gates the heirs check).
+  // 4) How they came to own it (cheap; gates the heirs check).
   if (!present(a.acquisitionSource)) return "acquisition_source";
-  // 4) Rough value.
+  // 5) Rough value.
   if (!present(a.estimatedValue)) return "estimated_value";
   return null;
 }
 
 function assetFromExisting(a: ChapterState["assets"][number]): EffAsset {
   return {
+    location: a.location,
     acquisitionSource: a.acquisitionSource,
     titleStatus: a.titleStatus,
     deedRecorded: a.deedRecorded,
@@ -107,12 +113,14 @@ function effectiveCaptured(
   const eff: EffAsset = base
     ? assetFromExisting(base)
     : {
+        location: null,
         acquisitionSource: null,
         titleStatus: null,
         deedRecorded: null,
         estimatedValue: null,
         createdAt: Number.MAX_SAFE_INTEGER, // brand-new = most recent
       };
+  if (present(args.location)) eff.location = String(args.location);
   if (present(args.acquisition_source))
     eff.acquisitionSource = String(args.acquisition_source);
   if (present(args.title_status)) eff.titleStatus = String(args.title_status);
@@ -132,6 +140,7 @@ function probe(kind: ProbeKind, topic: string, ask: string): Probe {
 const REAL_ESTATE_ASK: Record<string, string> = {
   title_status:
     "whether the deed or title to that property is clear and in their name",
+  location: "where that property is, the address or the area it is in",
   recipient: "who they would like this to go to",
   acquisition_source: "how they came to own that property",
   estimated_value: "roughly what that property is worth",
@@ -245,6 +254,11 @@ const CHIP_COPY: Record<ChapterId, ChapterCopy> = {
         "What is heirs property?",
         "What if the deed isn't in my name?",
         "Why does a clear title matter for my family?",
+      ],
+      location: [
+        "Why do you need the address?",
+        "What if it has no street address?",
+        "What if I own more than one place?",
       ],
       recipient: [
         "What if I want more than one person to have it?",

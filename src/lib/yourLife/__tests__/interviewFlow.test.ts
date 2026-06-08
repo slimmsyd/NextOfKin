@@ -41,11 +41,48 @@ describe("realEstateProbe ignores non-real-estate assets", () => {
       chapter: "real_estate",
       state: stateWith([
         asset({ id: "s", type: "account_savings", label: "Navy Federal" }),
-        asset({ id: "h", type: "real_estate", label: "Home", acquisitionSource: null }),
+        asset({
+          id: "h",
+          type: "real_estate",
+          label: "Home",
+          location: "123 Main St",
+          acquisitionSource: null,
+        }),
       ]),
       capturedThisTurn: [],
     });
-    // The property has no acquisition source -> ask that, not treat the savings as a gap.
+    // Location is known, so the next gap is acquisition source (and the savings
+    // is never treated as a gapped property).
+    expect(p.topic).toBe("acquisition_source");
+  });
+});
+
+describe("realEstateProbe asks for the property address (location)", () => {
+  it("asks location first when a property is newly named without one", () => {
+    const p = nextProbe({
+      chapter: "real_estate",
+      state: stateWith([]),
+      capturedThisTurn: [{ name: "upsert_asset", args: { label: "House" } }],
+    });
+    // Address before "who gets it": identify the property first.
+    expect(p.topic).toBe("location");
+  });
+
+  it("drops the location question once an address is on record", () => {
+    const p = nextProbe({
+      chapter: "real_estate",
+      state: stateWith([
+        asset({
+          id: "h",
+          type: "real_estate",
+          label: "House",
+          location: "19 Cedarview Ct",
+          acquisitionSource: null,
+        }),
+      ]),
+      capturedThisTurn: [],
+    });
+    expect(p.topic).not.toBe("location");
     expect(p.topic).toBe("acquisition_source");
   });
 });
