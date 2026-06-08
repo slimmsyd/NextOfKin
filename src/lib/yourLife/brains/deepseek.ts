@@ -13,6 +13,7 @@ import { nextProbe } from "@/lib/yourLife/interviewFlow";
 import { OFFERED_TOOLS } from "@/lib/yourLife/tools/registry";
 import { UpsertAssetSchema } from "@/lib/yourLife/tools/upsertAsset";
 import { AddFinancialAccountSchema } from "@/lib/yourLife/tools/addFinancialAccount";
+import { AddOtherAssetSchema } from "@/lib/yourLife/tools/addOtherAsset";
 import { AddPersonSchema } from "@/lib/yourLife/tools/addPerson";
 import { FlagHeirsPropertyRiskSchema } from "@/lib/yourLife/tools/flagHeirsPropertyRisk";
 import { ConfirmChapterCompleteSchema } from "@/lib/yourLife/tools/confirmChapterComplete";
@@ -42,6 +43,11 @@ function allToolDefs() {
       description:
         "Add a financial account: checking, savings, brokerage, 401(k), or IRA. Pass institution (the bank or provider) and account_type. Use this for bank, retirement, and investment accounts, NOT for real estate.",
       inputSchema: AddFinancialAccountSchema,
+    }),
+    add_other_asset: tool({
+      description:
+        "Capture an asset that is NOT real estate and NOT a financial account: a vehicle, business interest, personal property or valuables, life insurance, annuity, or anything else the person owns (e.g. crypto -> type 'other'). Pass the best-fit `type` and a short `label`. Use this instead of forcing such things into the real-estate (upsert_asset) or account (add_financial_account) tools.",
+      inputSchema: AddOtherAssetSchema,
     }),
     add_person: tool({
       description:
