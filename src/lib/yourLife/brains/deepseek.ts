@@ -41,12 +41,12 @@ function allToolDefs() {
     }),
     add_financial_account: tool({
       description:
-        "Add a financial account: checking, savings, brokerage, 401(k), or IRA. Pass institution (the bank or provider) and account_type. Use this for bank, retirement, and investment accounts, NOT for real estate.",
+        "Add or update a financial account: checking, savings, brokerage, 401(k), or IRA. Pass institution (the bank or provider) and account_type. Pass `id` (from the record) to UPDATE an existing account, for example to add its balance on a later turn; omit `id` to add a new one. Use this for bank, retirement, and investment accounts, NOT for real estate.",
       inputSchema: AddFinancialAccountSchema,
     }),
     add_other_asset: tool({
       description:
-        "Capture an asset that is NOT real estate and NOT a financial account: a vehicle, business interest, personal property or valuables, life insurance, annuity, or anything else the person owns (e.g. crypto -> type 'other'). Pass the best-fit `type` and a short `label`. Use this instead of forcing such things into the real-estate (upsert_asset) or account (add_financial_account) tools.",
+        "Add or update an asset that is NOT real estate and NOT a financial account: a vehicle, business interest, personal property or valuables, life insurance, annuity, or anything else the person owns (e.g. crypto -> type 'other'). Pass the best-fit `type` and a short `label`. Pass `id` (from the record) to UPDATE an existing one, for example to add its value later; omit `id` to add a new one. Use this instead of forcing such things into the real-estate (upsert_asset) or account (add_financial_account) tools.",
       inputSchema: AddOtherAssetSchema,
     }),
     add_person: tool({

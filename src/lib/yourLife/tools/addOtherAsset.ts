@@ -20,6 +20,10 @@ const OTHER_ASSET_TYPES = [
 ] as const;
 
 export const AddOtherAssetSchema = z.object({
+  // Entity resolution, mirrors upsert_asset: pass `id` (from the record) to
+  // UPDATE an existing item (e.g. add its value later); omit `id` to add a new
+  // one. Without this, recording a value created a duplicate.
+  id: z.string().uuid().optional(),
   type: z.enum(OTHER_ASSET_TYPES),
   label: z.string().min(1).max(160),
   estimated_value: z.number().nullable().optional(),
@@ -44,6 +48,28 @@ export async function applyAddOtherAsset(
   const transferPath: TransferPath = NON_PROBATE_TYPES.has(args.type)
     ? "non_probate_designation"
     : "probate";
+
+  if (args.id) {
+    // Update — owner-scoped. Writes only the fields provided so adding a value
+    // later doesn't wipe the rest, and never creates a second row.
+    const existing = await prisma.asset.findFirst({
+      where: { id: args.id, userId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!existing) throw new Error("Asset not found for this user");
+    return prisma.asset.update({
+      where: { id: args.id },
+      data: {
+        type: args.type as AssetType,
+        institution: args.label,
+        transferPath,
+        ...(args.detail !== undefined ? { identifier: args.detail } : {}),
+        ...(args.estimated_value !== undefined
+          ? { estimatedValue: args.estimated_value }
+          : {}),
+      },
+    });
+  }
 
   const created = await prisma.asset.create({
     data: {
