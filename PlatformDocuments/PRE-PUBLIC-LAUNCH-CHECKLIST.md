@@ -22,11 +22,18 @@
 - [ ] **Consent + privacy policy** disclose the AI subprocessor accurately
       (the `SetupConsent` copy was softened from "not even our team reads it" —
       finish the privacy-policy page to match).
-- [ ] **Speech-to-text retention** — family voice is transcribed by ElevenLabs
-      Scribe, which logs audio + transcripts by default. Enable zero-retention
-      (`ELEVENLABS_STT_ZERO_RETENTION=true`, enterprise plan) or switch to a
-      zero-retention STT host + DPA. Env-light by design. See
-      `ADR-002-speech-to-text-provider.md`.
+- [x] **Speech-to-text retention** — RESOLVED when whisper-flow is the default.
+      Family voice is now transcribed by self-hosted whisper-flow on our Cloud Run
+      (US, private), so no third-party STT logging. To confirm at launch: verify
+      `STT_PROVIDER=whisperFlow` in production and the service is deployed
+      `--no-allow-unauthenticated`. ElevenLabs Scribe remains only as an OFF-by-default
+      fallback. See `ADR-002` (Amendment 2026-06-08).
+- [ ] **Text-to-speech / narration voice** — still ElevenLabs (`/api/voice/[scene]`).
+      Narration is fixed and tiny (~1100 chars across 5 scenes), so this is a negligible
+      cost, not the credit sink (STT was). Note: the runtime disk cache does not persist
+      on Vercel, so leaving it live re-bills on cold instances. If this matters, pre-render
+      the 5 clips once and commit them as static files. Self-hosting the voice (MisoTTS or
+      a CPU model) is a deferred option, not required for launch.
 - [ ] **Captured onboarding data (the flywheel)** — `ConversationTurn` now stores
       per-turn capture signals (`inputMethod`, `desync`, `meta`); the harvest +
       insights scripts export real turns to `evals/review/` (gitignored). This stays

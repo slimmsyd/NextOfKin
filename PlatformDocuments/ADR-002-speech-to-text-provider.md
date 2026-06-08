@@ -1,8 +1,28 @@
 # ADR-002: ElevenLabs Scribe as the speech-to-text provider
 
-- **Status:** Accepted (V1, family-only)
+- **Status:** Superseded as default by self-hosted whisper-flow (see Amendment 2026-06-08). ElevenLabs Scribe retained as optional fallback.
 - **Date:** 2026-06-03
 - **Supersedes:** the browser Web Speech API used for the first voice-input pass
+
+## Amendment (2026-06-08): self-hosted whisper-flow is now the default STT
+
+We ran out of ElevenLabs credits, and the default-logging privacy debt below was never
+acceptable past the tiny pilot. Both pushed the same way: stop sending family voice to a
+third party.
+
+- **Default STT is now self-hosted whisper-flow** (faster-whisper `base.en`) on Google
+  Cloud Run, private, scale-to-zero. Family audio is decoded and transcribed entirely on
+  our own infrastructure and never reaches a third party. `STT_PROVIDER=whisperFlow`.
+- **ElevenLabs Scribe is retained as a fallback** behind the seam (`STT_PROVIDER=elevenlabs`,
+  default OFF). `src/lib/yourLife/stt.ts` is now a provider switch (mirrors `llm.ts`).
+- **The HARD GATE below is resolved when whisper-flow is the default**, because there is
+  no third-party STT logging. Verify `STT_PROVIDER=whisperFlow` and a private
+  (`--no-allow-unauthenticated`) service in production.
+- Phase 2 streaming now targets the whisper-flow `ws` endpoint, not ElevenLabs/Deepgram.
+- See `services/whisper-flow/`. Scope note: this change is STT only. TTS narration stays
+  on ElevenLabs (narration is fixed and cheap); self-hosting the voice is deferred.
+
+The original ADR is kept below for history.
 
 ## Context
 
