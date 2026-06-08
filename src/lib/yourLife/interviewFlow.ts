@@ -152,6 +152,12 @@ function realEstateProbe(
     return probe("done_check", "done_check", "");
   }
 
+  // The record now holds ALL the user's assets (accounts, vehicles, etc.), but
+  // this probe only reasons about real estate. Filter so an account or car is
+  // never mistaken for a gapped property (e.g. asking "how did you come to own"
+  // about a savings account).
+  const reAssets = state.assets.filter((a) => a.type === "real_estate");
+
   const upserts = capturedThisTurn.filter((c) => c.name === "upsert_asset");
   // If a recipient was captured this turn, don't re-ask "who gets it" (the
   // recipient probe only leads for a freshly named asset).
@@ -160,16 +166,17 @@ function realEstateProbe(
   // (a) Recency: an asset touched THIS turn wins (tracks the latest exchange).
   if (upserts.length) {
     const lastCall = upserts[upserts.length - 1];
-    const eff = effectiveCaptured(lastCall, state.assets);
+    const eff = effectiveCaptured(lastCall, reAssets);
     const isNew = typeof lastCall.args.id !== "string" && !personCaptured;
     const topic = realEstateFieldTopic(eff, isNew);
     if (topic) return probe("field", topic, REAL_ESTATE_ASK[topic]);
     return probe("another_asset", "another_asset", REAL_ESTATE_ASK.another_asset);
   }
 
-  // (b) Else: most-recently-created existing asset that still has a gap. Not new,
-  // so the recipient question (which only leads for a freshly named asset) is skipped.
-  const gapped = [...state.assets]
+  // (b) Else: most-recently-created existing property that still has a gap. Not
+  // new, so the recipient question (which only leads for a freshly named asset)
+  // is skipped.
+  const gapped = [...reAssets]
     .reverse()
     .map(assetFromExisting)
     .find(realEstateGap);
@@ -179,7 +186,7 @@ function realEstateProbe(
   }
 
   // (c) No gaps / no captures.
-  if (state.assets.length === 0) {
+  if (reAssets.length === 0) {
     return probe("open", "open", REAL_ESTATE_ASK.open);
   }
   return probe("another_asset", "another_asset", REAL_ESTATE_ASK.another_asset);
