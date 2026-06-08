@@ -25,7 +25,9 @@ export type FamilyView = {
   household: string | null;
 } | null;
 
-export type SidebarSectionState = "done" | "active" | "locked";
+// "future" = a phase shown dimmed as a teaser (e.g. Wishes & stories, V1.5),
+// not part of the V1 path and not lockable/reachable.
+export type SidebarSectionState = "done" | "active" | "locked" | "future";
 
 export type SidebarSection = {
   label: string;
