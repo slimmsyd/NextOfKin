@@ -2,7 +2,6 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { getChapter } from "@/lib/yourLife/chapters";
 
 export type ChapterState = {
   authUserId: string;
@@ -84,11 +83,15 @@ export async function loadChapterState(chapter: string): Promise<
     };
   }
 
-  // Which asset types belong to this chapter comes from the registry, so a new
-  // chapter loads the right assets without touching this query.
-  const assetTypes = getChapter(chapter)?.assetTypes ?? [];
+  // Load ALL of the user's assets, not just this chapter's type. The agent can
+  // capture any asset in any chapter (a 401k mentioned during real estate, a
+  // car, etc. -> add_financial_account / add_other_asset), so the record the
+  // model sees MUST include them all. Otherwise cross-type assets are invisible
+  // to entity resolution and get re-created every turn (the duplicate-rows bug),
+  // and the right pane wouldn't show them either. Chapter-specific logic (the
+  // real-estate probe) filters by type itself; see interviewFlow.ts.
   const assetRows = await prisma.asset.findMany({
-    where: { userId: user.id, type: { in: assetTypes }, deletedAt: null },
+    where: { userId: user.id, deletedAt: null },
     orderBy: { createdAt: "asc" },
   });
 

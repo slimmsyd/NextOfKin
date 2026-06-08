@@ -8,6 +8,7 @@ export const ASSET_TOOLS: ReadonlySet<string> = new Set([
   "upsert_asset",
   "add_real_estate",
   "add_financial_account",
+  "add_other_asset",
   "flag_heirs_property_risk",
   "update_asset_field",
 ]);

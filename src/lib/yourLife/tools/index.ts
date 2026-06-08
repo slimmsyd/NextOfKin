@@ -12,6 +12,7 @@ import {
   AddFinancialAccountSchema,
   applyAddFinancialAccount,
 } from "./addFinancialAccount";
+import { AddOtherAssetSchema, applyAddOtherAsset } from "./addOtherAsset";
 import { AddPersonSchema, applyAddPerson } from "./addPerson";
 import {
   FlagHeirsPropertyRiskSchema,
@@ -31,6 +32,7 @@ export const toolSchemas = {
   add_real_estate: AddRealEstateSchema,
   upsert_asset: UpsertAssetSchema,
   add_financial_account: AddFinancialAccountSchema,
+  add_other_asset: AddOtherAssetSchema,
   add_person: AddPersonSchema,
   flag_heirs_property_risk: FlagHeirsPropertyRiskSchema,
   confirm_chapter_complete: ConfirmChapterCompleteSchema,
@@ -101,6 +103,15 @@ export async function validateAndApply(
           ctx.userId,
           ctx.stateCode,
           parsed.data as z.infer<typeof AddFinancialAccountSchema>,
+        );
+        return { ok: true, name, data };
+      }
+      case "add_other_asset": {
+        const data = await applyAddOtherAsset(
+          ctx.prisma,
+          ctx.userId,
+          ctx.stateCode,
+          parsed.data as z.infer<typeof AddOtherAssetSchema>,
         );
         return { ok: true, name, data };
       }

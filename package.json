@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:db": "node --env-file=.env node_modules/vitest/vitest.mjs run",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -21,6 +22,7 @@
     "@supabase/supabase-js": "^2.106.1",
     "ai": "^6.0.191",
     "framer-motion": "^12.40.0",
+    "langsmith": "^0.7.5",
     "next": "16.2.6",
     "pg": "^8.21.0",
     "prisma-extension-soft-delete": "^2.0.1",

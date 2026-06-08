@@ -17,6 +17,12 @@ export const AddPersonSchema = z.object({
     .optional(),
   /** Asset this person should receive (designate as primary beneficiary). */
   asset_id: z.string().uuid().optional(),
+  /**
+   * When the asset they should receive is being captured THIS SAME turn (so it
+   * has no id on the record yet), the asset's label. The route resolves it to
+   * the freshly-created asset_id after the asset tools run. See resolveLinks.ts.
+   */
+  receives_new_asset_label: z.string().min(1).max(160).optional(),
 });
 
 export type AddPersonInput = z.infer<typeof AddPersonSchema>;

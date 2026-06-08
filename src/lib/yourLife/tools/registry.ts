@@ -15,6 +15,7 @@ import type { ToolName } from "./index";
 const ASSET_PHASE_TOOLS: ToolName[] = [
   "upsert_asset",
   "add_financial_account",
+  "add_other_asset",
   "flag_heirs_property_risk",
   "add_person",
   "confirm_chapter_complete",
@@ -38,5 +39,13 @@ export const TOOL_PRODUCES_ASSET_TYPES: Partial<Record<ToolName, AssetType[]>> =
     "account_brokerage",
     "account_checking",
     "account_savings",
+  ],
+  add_other_asset: [
+    "vehicle",
+    "life_insurance",
+    "annuity",
+    "business_interest",
+    "personal_property",
+    "other",
   ],
 };

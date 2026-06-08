@@ -1,6 +1,6 @@
 {
   "_note": "Shared agent contract for evals. extractionRules mirrors EXTRACTION_RULES in src/lib/yourLife/agentContract.ts (the capture path), plus the tool schemas. If you change the extraction prompt or tools there, update this file. Future: generate this from the TS source.",
-  "extractionRules": "You are the capture engine for an estate-intake conversation. Your ONLY job is to emit tool calls for what the person stated THIS turn. You do not write any prose reply.\n\nRules:\n- Capture EARLY: create a row the moment a thing is identifiable (an address, \"our home\", an account). Do not wait for more detail.\n- Leave unknown fields null. NEVER invent a value, a name, a number, an address, or a balance. Empty is safe; invented is harmful.\n- ENTITY RESOLUTION: the record below lists existing items (and people) with their IDs. If the person refers to one that already exists, call the tool with that id to UPDATE it. Never create a duplicate.\n- WHO IT GOES TO: when the person names who should RECEIVE a property (a recipient or beneficiary, e.g. \"it goes to my son Atlas\"), call add_person with their name (and relationship if stated) and set asset_id to that property's id from the record. The OWNER (the person you are talking to) is never the recipient. Update an existing person by their id.\n- Do not re-capture what is unchanged. If the person stated nothing new and gave no instruction, emit NO tool call.\n- Do not re-ask or re-record what the chapter opening already implied (the chapter is about things they own).\n- When the person signals they have nothing more to add, call confirm_chapter_complete. If they want to skip for now, call defer_chapter.\n\nThis chapter's focus: ",
+  "extractionRules": "You are the capture engine for an estate-intake conversation. Your ONLY job is to emit tool calls for what the person stated THIS turn. You do not write any prose reply.\n\nRules:\n- Capture EARLY: create a row the moment a thing is identifiable (an address, \"our home\", an account). Do not wait for more detail.\n- CAPTURE EVERY ASSET, RIGHT TOOL: capture each thing the person owns the moment it is named, EVEN IF it is not this chapter's focus. Real property -> upsert_asset. Any bank, retirement, brokerage, or investment account (e.g. \"Vanguard\", a 401k) -> add_financial_account. Anything else they own (a vehicle, a business, valuables, crypto, life insurance) -> add_other_asset with the best-fit type. NEVER drop a stated asset because it is off-topic, and NEVER force it into the wrong tool (a car is not real estate).\n- Leave unknown fields null. NEVER invent a value, a name, a number, an address, or a balance. Empty is safe; invented is harmful.\n- ENTITY RESOLUTION: the record below lists existing items (and people) with their IDs. If the person refers to one that already exists, call the tool with that id to UPDATE it. Never create a duplicate.\n- WHO IT GOES TO: when the person names who should RECEIVE a property (a recipient or beneficiary, e.g. \"it goes to my son Atlas\"), call add_person with their name (and relationship if stated) and set asset_id to that property's id from the record. If the asset is one you are capturing this same turn (no id yet), set receives_new_asset_label to that asset's label instead. The OWNER (the person you are talking to) is never the recipient. Update an existing person by their id.\n- Do not re-capture what is unchanged. If the person stated nothing new and gave no instruction, emit NO tool call.\n- Do not re-ask or re-record what the chapter opening already implied (the chapter is about things they own).\n- When the person signals they have nothing more to add, call confirm_chapter_complete. If they want to skip for now, call defer_chapter.\n\nThis chapter's focus: ",
   "chapterGoals": {
     "real_estate": "REAL ESTATE — the person's home and any land or other property. Use upsert_asset to add or update a property. Inherited family land without a clear deed is common; capture it and you may flag_heirs_property_risk. When the person says who a property should GO TO, capture that recipient with add_person and set asset_id to that property's id.",
     "financial_accounts": "FINANCIAL ACCOUNTS — checking, savings, retirement (401k, IRA), and brokerage/investment accounts. Use add_financial_account for each account (pass institution and account_type). If the person also mentions real estate, capture it with upsert_asset. When they name who should receive something, capture that recipient with add_person."
@@ -30,10 +30,11 @@
       "type": "function",
       "function": {
         "name": "add_financial_account",
-        "description": "Add a financial account: checking, savings, brokerage, 401(k), or IRA. Pass institution (the bank or provider) and account_type. Use this for bank, retirement, and investment accounts, NOT for real estate.",
+        "description": "Add or update a financial account: checking, savings, brokerage, 401(k), or IRA. Pass institution and account_type. Pass `id` (from the record) to UPDATE an existing account, e.g. to add its balance later; omit `id` to add a new one. Use this for bank, retirement, and investment accounts, NOT for real estate.",
         "parameters": {
           "type": "object",
           "properties": {
+            "id": { "type": "string", "description": "Existing account id to update (e.g. to add a balance); omit to create." },
             "institution": { "type": "string", "description": "Bank or provider, e.g. 'Vanguard', 'Bank of America'." },
             "account_type": { "type": "string", "enum": ["account_401k", "account_ira", "account_brokerage", "account_checking", "account_savings"] },
             "estimated_value": { "type": ["number", "null"] },
@@ -46,8 +47,26 @@
     {
       "type": "function",
       "function": {
+        "name": "add_other_asset",
+        "description": "Add or update an asset that is NOT real estate and NOT a financial account: a vehicle, business interest, personal property or valuables, life insurance, annuity, or anything else the person owns (e.g. crypto -> type 'other'). Pass the best-fit `type` and a short `label`. Pass `id` (from the record) to UPDATE an existing one, e.g. to add its value later; omit `id` to add a new one. Use this instead of forcing such things into the real-estate or account tools.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Existing asset id to update (e.g. to add a value); omit to create." },
+            "type": { "type": "string", "enum": ["vehicle", "life_insurance", "annuity", "business_interest", "personal_property", "other"] },
+            "label": { "type": "string", "description": "Short name, e.g. 'Hyundai Sonata', 'Coin collection'." },
+            "estimated_value": { "type": ["number", "null"] },
+            "detail": { "type": ["string", "null"], "description": "Optional free detail." }
+          },
+          "required": ["type", "label"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "add_person",
-        "description": "Record a person who should RECEIVE a property (a recipient/beneficiary). Pass full_name (and relationship if stated) and set asset_id to the property's id from the record. Pass the person's `id` to UPDATE an existing one. The owner you are talking to is never the recipient.",
+        "description": "Record a person who should RECEIVE a property (a recipient/beneficiary). Pass full_name (and relationship if stated). For a property already on the record set asset_id; for an asset captured this same turn (no id yet) set receives_new_asset_label instead. Pass the person's `id` to UPDATE an existing one. The owner you are talking to is never the recipient.",
         "parameters": {
           "type": "object",
           "properties": {
@@ -55,7 +74,8 @@
             "full_name": { "type": "string" },
             "relationship": { "type": "string", "description": "e.g. 'son', 'daughter', 'spouse'." },
             "date_of_birth": { "type": ["string", "null"], "description": "yyyy-mm-dd" },
-            "asset_id": { "type": "string", "description": "Property this person should receive." }
+            "asset_id": { "type": "string", "description": "Existing property (on record) this person should receive." },
+            "receives_new_asset_label": { "type": "string", "description": "Label of an asset created THIS turn this person should receive (use instead of asset_id when the asset has no id yet)." }
           },
           "required": ["full_name"]
         }

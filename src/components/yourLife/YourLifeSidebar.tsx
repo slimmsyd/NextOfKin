@@ -110,7 +110,7 @@ export function YourLifeSidebar({
                   <span
                     aria-hidden
                     className={`font-serif italic text-[13px] leading-none w-3.5 ${
-                      section.state === "locked"
+                      section.state === "locked" || section.state === "future"
                         ? "text-foreground/30"
                         : "text-brand-indigo"
                     }`}
@@ -119,7 +119,7 @@ export function YourLifeSidebar({
                   </span>
                   <span
                     className={`flex-1 text-[13px] ${
-                      section.state === "locked"
+                      section.state === "locked" || section.state === "future"
                         ? "text-foreground/40"
                         : isActive
                           ? "text-foreground font-medium"

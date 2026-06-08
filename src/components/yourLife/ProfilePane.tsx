@@ -243,7 +243,7 @@ export function ProfilePane({
         </>
       ) : null}
 
-      <SectionLabel>What You Have</SectionLabel>
+      <SectionLabel>What You Own</SectionLabel>
       {assets.length > 0 ? (
         assets.map((a) => (
           <AssetCard

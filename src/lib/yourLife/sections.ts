@@ -1,13 +1,17 @@
 import { CHAPTERS } from "@/lib/yourLife/chapters";
-import type { SidebarSection } from "@/components/yourLife/types";
+import { JOURNEY, type JourneyPhaseId } from "@/lib/yourLife/journey";
+import type {
+  SidebarSection,
+  SidebarSectionState,
+} from "@/components/yourLife/types";
 
-// Pure, client-safe derivation of the four intake phase sections from chapter
-// progress + whether any people are on record. Used both server-side (initial
-// render) and client-side (live, as confirm/defer/person stream in), so the
-// sidebar and right pane stay in sync with the conversation without a reload.
+// Pure, client-safe derivation of the intake sidebar from chapter progress +
+// whether any people are on record. Used both server-side (initial render) and
+// client-side (live, as confirm/defer/person stream in), so the sidebar and the
+// right pane stay in sync with the conversation without a reload.
 //
-// Phases: About you (identity, done by this point) -> What you have (the chapter
-// loop) -> Who you protect (beneficiaries, Phase 4) -> Wishes (later).
+// The phase list itself lives in journey.ts (the single source of truth); this
+// only computes each phase's state from the deterministic record.
 
 type ProgressMap = Record<string, string>;
 
@@ -22,15 +26,22 @@ export function deriveSections(
   progress: ProgressMap,
   opts: { hasPeople: boolean },
 ): SidebarSection[] {
-  const loopDone = chapterLoopDone(progress);
-  // "Who you protect" is no longer locked once people exist (the pane reflects
-  // real data, rule #5) OR once the chapter loop is finished (we've arrived).
-  const whoYouProtect: SidebarSection["state"] =
-    opts.hasPeople || loopDone ? "active" : "locked";
-  return [
-    { label: "About you", state: "done" },
-    { label: "What you have", state: loopDone ? "done" : "active" },
-    { label: "Who you protect", state: whoYouProtect },
-    { label: "Wishes & stories", state: "locked" },
-  ];
+  // "What you own" is done once the asset loop is finished. People become
+  // reachable when the loop is done OR a beneficiary already exists (the pane
+  // reflects real data, rule #5).
+  const assetsDone = chapterLoopDone(progress);
+  const peopleReachable = assetsDone || opts.hasPeople;
+
+  const stateById: Record<JourneyPhaseId, SidebarSectionState> = {
+    about_you: "done",
+    what_you_own: assetsDone ? "done" : "active",
+    who_you_protect: peopleReachable ? "active" : "locked",
+    // Review unlocks once the people phase completes (a later slice tracks that
+    // signal); locked for now so the nav never lies about being reachable.
+    review: "locked",
+    // V1.5 teaser, dimmed and not part of the V1 path.
+    wishes: "future",
+  };
+
+  return JOURNEY.map((p) => ({ label: p.label, state: stateById[p.id] }));
 }
