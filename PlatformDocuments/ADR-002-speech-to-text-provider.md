@@ -19,8 +19,8 @@ third party.
   no third-party STT logging. Verify `STT_PROVIDER=whisperFlow` and a private
   (`--no-allow-unauthenticated`) service in production.
 - Phase 2 streaming now targets the whisper-flow `ws` endpoint, not ElevenLabs/Deepgram.
-- See `services/whisper-flow/` and the plan. TTS moved off ElevenLabs in the same effort
-  (pre-rendered MisoTTS clips); record a sibling decision when ADR-003 is written.
+- See `services/whisper-flow/`. Scope note: this change is STT only. TTS narration stays
+  on ElevenLabs (narration is fixed and cheap); self-hosting the voice is deferred.
 
 The original ADR is kept below for history.
 

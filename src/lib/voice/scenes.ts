@@ -1,12 +1,7 @@
-// Server-side scene library for voice narration.
-//
-// The 5 scene texts live in scenes.data.json so they are a SINGLE SOURCE shared
-// between this module and the offline TTS render script
-// (services/miso-tts/scripts/render_scenes.py). When a script changes here, re-render
-// the affected clip. The text is static today; when spoken agent replies land, the
-// TTS provider seam (TTS_PROVIDER) gains a live `misoService` source.
-
-import sceneText from "./scenes.data.json";
+// Server-side scene library for ElevenLabs voiceovers.
+// Each phase/step that wants narration registers its text here. The text is
+// static today; when the agent text layer lands, individual scenes can swap
+// to a Claude-generated prompt without changing the client.
 
 export type SceneKey =
   | "welcome"
@@ -23,19 +18,28 @@ type Scene = {
 const DEFAULT_VOICE_ID =
   process.env.ELEVENLABS_WELCOME_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
 
-const SCENE_TEXT = sceneText as Record<SceneKey, string>;
-
-const SCENE_KEYS: SceneKey[] = [
-  "welcome",
-  "consent",
-  "protect",
-  "about-you",
-  "your-life-real-estate",
-];
-
-export const SCENES: Record<SceneKey, Scene> = Object.fromEntries(
-  SCENE_KEYS.map((key) => [key, { key, text: SCENE_TEXT[key] }]),
-) as Record<SceneKey, Scene>;
+export const SCENES: Record<SceneKey, Scene> = {
+  welcome: {
+    key: "welcome",
+    text: "Over the next hour, we'll walk through what matters to you, who matters to you, and how you'd want things handled if something happened. Nothing is final until you say so. We won't ask you anything legal or technical yet. This first step is just so you know what's ahead, and so you trust where this is going.",
+  },
+  consent: {
+    key: "consent",
+    text: "Before we start, here's what we promise you, and what we ask back. We encrypt everything. We never sell your data. Nothing leaves without you. And you can take it with you anytime. In return, we ask that you tell us what's true, keep your sign-in safe, and update us when life changes.",
+  },
+  protect: {
+    key: "protect",
+    text: "Let's protect what you share with me. We'll send you a code each time you sign in. That way only you can see what's here.",
+  },
+  "about-you": {
+    key: "about-you",
+    text: "Let's start with you. Seven quick questions. About ten minutes.",
+  },
+  "your-life-real-estate": {
+    key: "your-life-real-estate",
+    text: "Now we'll talk about where you live and any property in your family. Take your time. Tell me what you have, and I'll keep track of it on the right side of the screen.",
+  },
+};
 
 // All scenes use the same voice today. When we want per-scene voices later
 // (e.g. a different voice for legal copy), add overrides here keyed by SceneKey.
@@ -46,5 +50,11 @@ export function getVoiceId(scene: SceneKey): string {
 }
 
 export function isSceneKey(value: string): value is SceneKey {
-  return (SCENE_KEYS as string[]).includes(value);
+  return (
+    value === "welcome" ||
+    value === "consent" ||
+    value === "protect" ||
+    value === "about-you" ||
+    value === "your-life-real-estate"
+  );
 }

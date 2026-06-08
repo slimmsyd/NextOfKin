@@ -28,10 +28,12 @@
       `STT_PROVIDER=whisperFlow` in production and the service is deployed
       `--no-allow-unauthenticated`. ElevenLabs Scribe remains only as an OFF-by-default
       fallback. See `ADR-002` (Amendment 2026-06-08).
-- [x] **Text-to-speech / narration voice** — RESOLVED. Narration is served from
-      pre-rendered self-hosted MisoTTS clips (`public/voice/*.mp3`, `TTS_PROVIDER=static`),
-      no third party. To confirm at launch: `TTS_PROVIDER` is not `elevenlabs`, and the
-      **MisoTTS license** is confirmed for commercial use. See `ADR-003`.
+- [ ] **Text-to-speech / narration voice** — still ElevenLabs (`/api/voice/[scene]`).
+      Narration is fixed and tiny (~1100 chars across 5 scenes), so this is a negligible
+      cost, not the credit sink (STT was). Note: the runtime disk cache does not persist
+      on Vercel, so leaving it live re-bills on cold instances. If this matters, pre-render
+      the 5 clips once and commit them as static files. Self-hosting the voice (MisoTTS or
+      a CPU model) is a deferred option, not required for launch.
 - [ ] **Captured onboarding data (the flywheel)** — `ConversationTurn` now stores
       per-turn capture signals (`inputMethod`, `desync`, `meta`); the harvest +
       insights scripts export real turns to `evals/review/` (gitignored). This stays

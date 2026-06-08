@@ -1,8 +1,0 @@
-# miso-tts service deps. MisoTTS itself (the `generator` module) is installed from its
-# GitHub repo in the Dockerfile (it ships as a top-level module, not a pip package).
-# Pin torch/torchaudio to a CUDA build matching the base image.
-fastapi==0.115.*
-uvicorn[standard]==0.32.*
-pydantic==2.*
-torch
-torchaudio
